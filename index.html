@@ -63,6 +63,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .pl-dur{font-size:11px;color:var(--muted);min-width:36px;text-align:right}.pl-del{color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s}.pl-del:hover{color:#ff1744}
 .fx-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02)}
 .fx-btn:hover{border-color:var(--accent);background:rgba(255,45,85,.06);transform:scale(1.05)}.fx-btn:active{transform:scale(.95)}
+.fx-btn.voice-active{border-color:var(--accent);background:rgba(255,45,85,.1);box-shadow:0 0 12px rgba(255,45,85,.15)}
 .fx-icon{font-size:20px;margin-bottom:4px}.fx-name{font-size:10px;font-weight:600;color:var(--muted)}
 .req-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:6px}
 .sch-table{width:100%;border-collapse:collapse;font-size:12px}.sch-table th{text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-size:11px}
@@ -72,20 +73,19 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .stat-val{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--accent)}.stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
 .rec-dot{width:10px;height:10px;border-radius:50%;background:#ff1744;animation:pd 1s ease-in-out infinite;display:inline-block;vertical-align:middle}
 .theme-pop{position:absolute;top:100%;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5);gap:8px}
-.theme-pop.open{display:flex}.theme-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.theme-pop.open{display:flex}.theme-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15px}
 .theme-dot:hover{transform:scale(1.2)}.theme-dot.act{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.3)}
 .drop-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(255,45,85,.04)}
 .np-marquee{overflow:hidden;white-space:nowrap}.np-marquee span{display:inline-block;animation:mq 12s linear infinite}@keyframes mq{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
 @media(max-width:860px){.chat-p{position:fixed;right:-320px;top:0;bottom:0;z-index:100;transition:right .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.5);height:100vh}.chat-p.open{right:0}.cbtn{display:flex}}
-@media(max-width:600px){.vm{width:160px!important;height:160px!important}.vlm{width:50px!important;height:50px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:100px!important}.cg{flex-direction:column!important}.fx-grid{grid-template-columns:repeat(3,1fr)!important}}
+@media(max-width:600px){.vm{width:160px!important;height:160px!important}.vlm{width:50px!important;height:50px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:100px!important}.cg{flex-direction:column!important}}
 @media(prefers-reduced-motion:reduce){.vinyl.spin,.login-bg,.float-orb,.on-air-dot.active,.rec-dot{animation:none!important}.mr{animation:none!important}*{transition-duration:.01ms!important}}
 </style>
 </head>
 <body class="bg-atm">
 <div id="toast" class="toast-el" role="alert" aria-live="polite"></div>
 <div id="cov" class="cov"></div>
-
 <section id="login" class="fixed inset-0 flex items-center justify-center z-50 px-4">
 <div class="vinyl login-bg" aria-hidden="true"><div class="vinyl-lbl" style="width:120px;height:120px;font-size:11px">RADIO<br>STUDIO</div><div class="vinyl-hole" style="width:16px;height:16px"></div></div>
 <div class="float-orb" style="width:6px;height:6px;background:var(--accent);opacity:.2;top:18%;left:12%" aria-hidden="true"></div>
@@ -115,7 +115,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="flex flex-1 overflow-hidden">
 <main class="flex-1 flex flex-col overflow-y-auto p-4 md:p-6">
 
-<!-- YAYINCI -->
 <div id="vBc" class="hidden flex-1 flex flex-col items-center gap-4">
 <div class="flex items-center gap-5 md:gap-8">
 <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL" style="height:0%"></div><div class="vu-peak" id="vuPL" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
@@ -134,7 +133,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="flex items-center gap-3 text-xs" style="color:var(--muted)"><span><i class="fas fa-clock mr-1"></i><span id="tmBc">00:00:00</span></span><span id="recInd" class="hidden"><span class="rec-dot" style="margin-right:4px"></span>KAYIT</span></div>
 </div>
 
-<!-- Yayıncı Sekmeler -->
 <div class="w-full max-w-xl">
 <div class="tab-bar">
 <button class="tab-btn act" data-tab="dj">Auto DJ</button>
@@ -157,15 +155,36 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </div>
 
 <div id="tab-fx" class="tab-content mt-3">
-<div class="grid gap-2 fx-grid" style="grid-template-columns:repeat(3,1fr)">
-<div class="fx-btn" data-fx="jingle1"><div class="fx-icon" style="color:#ff2d55"><i class="fas fa-music"></i></div><div class="fx-name">Jingle 1</div></div>
-<div class="fx-btn" data-fx="jingle2"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-star"></i></div><div class="fx-name">Jingle 2</div></div>
-<div class="fx-btn" data-fx="bell"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-bell"></i></div><div class="fx-name">Zil</div></div>
-<div class="fx-btn" data-fx="alarm"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-exclamation-triangle"></i></div><div class="fx-name">Alarm</div></div>
-<div class="fx-btn" data-fx="sweep"><div class="fx-icon" style="color:#00e676"><i class="fas fa-wind"></i></div><div class="fx-name">Sweep</div></div>
-<div class="fx-btn" data-fx="hit"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-bolt"></i></div><div class="fx-name">Hit</div></div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-music mr-1"></i>JINGLELER</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
+<div class="fx-btn" data-fx="jingle-short"><div class="fx-icon" style="color:#ff2d55"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Kisa</div></div>
+<div class="fx-btn" data-fx="jingle-mid"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Orta</div></div>
+<div class="fx-btn" data-fx="jingle-long"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Uzun</div></div>
 </div>
-<div class="mt-4 p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)"><div class="text-xs font-semibold mb-2" style="color:var(--muted)">KAYIT</div><div class="flex items-center gap-2"><button id="btnRec" class="btn btn-sm btn-red" disabled><i class="fas fa-circle mr-1"></i>KAYIT BASLAT</button><button id="btnRecDl" class="btn btn-sm btn-ghost hidden"><i class="fas fa-download mr-1"></i>INDIR</button></div></div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-volume-up mr-1"></i>SES EFEKTLERI</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
+<div class="fx-btn" data-fx="laugh"><div class="fx-icon" style="color:#ff9500"><i class="fas fa-face-laugh"></i></div><div class="fx-name">Kahkaha</div></div>
+<div class="fx-btn" data-fx="clap"><div class="fx-icon" style="color:#00e676"><i class="fas fa-hand"></i></div><div class="fx-name">Alkis</div></div>
+<div class="fx-btn" data-fx="horn"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-bullhorn"></i></div><div class="fx-name">Horn</div></div>
+<div class="fx-btn" data-fx="cheer"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-users"></i></div><div class="fx-name">Tezahurat</div></div>
+</div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-leaf mr-1"></i>DOGA SESLERI</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
+<div class="fx-btn" data-fx="rain"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-cloud-rain"></i></div><div class="fx-name">Yagmur</div></div>
+<div class="fx-btn" data-fx="thunder"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-bolt"></i></div><div class="fx-name">Gokgurultusu</div></div>
+<div class="fx-btn" data-fx="birds"><div class="fx-icon" style="color:#00e676"><i class="fas fa-dove"></i></div><div class="fx-name">Kuslar</div></div>
+<div class="fx-btn" data-fx="ocean"><div class="fx-icon" style="color:#00b4d8"><i class="fas fa-water"></i></div><div class="fx-name">Okyanus</div></div>
+</div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-sliders-h mr-1"></i>SES EFEK AYARI</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
+<div class="fx-btn voice-fx voice-active" data-voice="normal"><div class="fx-icon" style="color:var(--fg)"><i class="fas fa-microphone"></i></div><div class="fx-name">Normal</div></div>
+<div class="fx-btn voice-fx" data-voice="telefon"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-phone"></i></div><div class="fx-name">Telefon</div></div>
+<div class="fx-btn voice-fx" data-voice="radyo"><div class="fx-icon" style="color:#ff9500"><i class="fas fa-broadcast-tower"></i></div><div class="fx-name">Radyo</div></div>
+<div class="fx-btn voice-fx" data-voice="robot"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-robot"></i></div><div class="fx-name">Robot</div></div>
+<div class="fx-btn voice-fx" data-voice="yanki"><div class="fx-icon" style="color:#00e676"><i class="fas fa-mountain"></i></div><div class="fx-name">Yanki</div></div>
+<div class="fx-btn voice-fx" data-voice="derin"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-drum"></i></div><div class="fx-name">Derin</div></div>
+</div>
+<div class="p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)"><div class="text-xs font-semibold mb-2" style="color:var(--muted)">KAYIT</div><div class="flex items-center gap-2"><button id="btnRec" class="btn btn-sm btn-red" disabled><i class="fas fa-circle mr-1"></i>KAYIT BASLAT</button><button id="btnRecDl" class="btn btn-sm btn-ghost hidden"><i class="fas fa-download mr-1"></i>INDIR</button></div></div>
 <div class="mt-3 p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)"><div class="text-xs font-semibold mb-2" style="color:var(--muted)">REKLAM ARASI</div><div class="flex items-center gap-2"><input id="iAdTime" class="inp" type="number" value="30" min="5" max="600" style="width:70px;padding:6px 8px;font-size:12px"><span class="text-xs" style="color:var(--muted)">sn</span><button id="btnAd" class="btn btn-sm btn-ghost" disabled><i class="fas fa-play mr-1"></i>BASLAT</button><span id="adCount" class="text-xs font-mono" style="color:var(--warm)">00:00</span></div></div>
 </div>
 
@@ -186,7 +205,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </div></div>
 </div></div>
 
-<!-- DİNLEYİCİ -->
 <div id="vLs" class="hidden flex-1 flex flex-col items-center gap-4">
 <div class="flex items-center gap-5 md:gap-8">
 <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL2" style="height:0%"></div><div class="vu-peak" id="vuPL2" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
@@ -211,7 +229,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </div></div>
 </main>
 
-<!-- SOHBET -->
 <aside id="chatP" class="chat-p">
 <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)"><h2 class="font-display text-xs font-bold tracking-widest">SOHBET</h2><div class="flex items-center gap-2"><span id="chatOn" class="badge">0</span><button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer"><i class="fas fa-times"></i></button></div></div>
 <div id="chatMsgs" class="chat-msgs" role="log" aria-live="polite"></div>
@@ -222,22 +239,16 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </div>
 
 <script>
-/* === DURUM === */
 var S={mode:null,station:'',nick:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
-
-/* === SES DEGISKENLERI === */
 var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,bcSrc=null,bcMic=null,bcSendProc=null,bcSilent=null,bcStreamDest=null,bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
+var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceModGain=null,voiceEffect='normal';
 var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayProc=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0,lsAudioQ=[],LS_MAX_Q=60;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
-
-/* === WEBSOCKET === */
 var ws=null,wsReconn=null;
 function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q)lsAudioQ.push(new Float32Array(e.data));}};}
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
 function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0});}
 function setConn(s){$('connDot').className='conn-dot '+s;}
-
-/* === YARDIMCILAR === */
 var $=function(id){return document.getElementById(id);};
 var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
 function nCol(n){var h=0;for(var i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return nColors[Math.abs(h)%nColors.length];}
@@ -245,13 +256,9 @@ function fmtT(s){return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Ma
 function fmtM(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
 var _tt;function toast(m){var e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show');},2800);}
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-
-/* === TEMA === */
 var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',warm:'#00b4d8'},yesil:{accent:'#00e676',warm:'#76ff03'},mor:{accent:'#cc5de8',warm:'#e040fb'},turuncu:{accent:'#ff9500',warm:'#ff6d00'}};
 function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style.setProperty('--accent',t.accent);document.documentElement.style.setProperty('--warm',t.warm);document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});try{localStorage.setItem('radio-theme',n);}catch(e){}}
 function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
-
-/* === GIRIS === */
 function initLogin(){
 var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo');
 var check=function(){btn.disabled=!($('iStation').value.trim()&&$('iNick').value.trim()&&S.mode);};
@@ -262,11 +269,7 @@ if(btn.disabled)return;S.station=$('iStation').value.trim();S.nick=$('iNick').va
  $('login').classList.add('hidden');$('app').classList.remove('hidden');
  $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
 if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
- $('fStatus').textContent=S.nick+' olarak giris yaptiniz';
-if(ws&&ws.readyState===1)doJoin();
-});}
-
-/* === MESAJ ISLEYICI === */
+ $('fStatus').textContent=S.nick+' olarak giris yaptiniz';if(ws&&ws.readyState===1)doJoin();});}
 function handleMsg(m){
 switch(m.type){
 case'joined':if(m.role==='broadcaster'){$('fStatus').textContent='Yayinci olarak baglandiniz';}else{$('fStatus').textContent='Dinleyici olarak baglandiniz';if(m.active){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');}updCount(m.count||0);if(m.schedule)renderSch(m.schedule,false);}break;
@@ -287,38 +290,27 @@ function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('
 function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
 function updCount(n){S.listenerCount=n;$('hdrLis').innerHTML='<i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>'+n;$('chatOn').textContent=n;}
 function updStats(){$('stCur').textContent=S.listenerCount;$('stPeak').textContent=S.peak;$('stTotal').textContent=S.totalJoined;if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);}
-
-/* === SEKME SISTEMI === */
 function initTabs(){
 document.querySelectorAll('[data-tab]').forEach(function(b){b.addEventListener('click',function(){var t=b.dataset.tab;b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});b.classList.add('act');b.parentElement.parentElement.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});$('tab-'+t).classList.add('act');});});
-document.querySelectorAll('[data-tab-ls]').forEach(function(b){b.addEventListener('click',function(){var t=b.dataset.tabLs;b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});b.classList.add('act');b.parentElement.parentElement.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});$('tab-'+t).classList.add('act');});});
-}
-
-/* === YAYINCI KURULUM === */
+document.querySelectorAll('[data-tab-ls]').forEach(function(b){b.addEventListener('click',function(){var t=b.dataset.tabLs;b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});b.classList.add('act');b.parentElement.parentElement.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});$('tab-'+t).classList.add('act');});});}
 function setupBc(){
 var sel=$('selMic');
 navigator.mediaDevices.getUserMedia({audio:true}).then(function(tmp){tmp.getTracks().forEach(function(t){t.stop();});return navigator.mediaDevices.enumerateDevices();}).then(function(devs){
 sel.innerHTML='';var found=false;devs.filter(function(d){return d.kind==='audioinput';}).forEach(function(d,i){var o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Mikrofon '+(i+1));sel.appendChild(o);found=true;});if(!found)sel.innerHTML='<option>Mikrofon bulunamadi</option>';
 }).catch(function(){sel.innerHTML='<option value="">Mikrofon erisimi gerekli</option>';toast('Mikrofon izni verin ve sayfayi yenileyin');});
-
  $('btnBc').addEventListener('click',toggleBc);
  $('btnMic').addEventListener('click',toggleMic);
  $('rngGain').addEventListener('input',function(e){var v=parseInt(e.target.value);$('lblGain').textContent=v+'%';if(bcGain&&S.micOn)bcGain.gain.value=v/100;});
-
-/* Auto DJ */
 var dz=$('dropZone'),fi=$('fileInp');
 dz.addEventListener('click',function(){fi.click();});dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag');addFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){addFiles(fi.files);fi.value='';});
  $('plPrev').addEventListener('click',function(){playPl(djCurIdx-1);});$('plPlay').addEventListener('click',toggleDj);$('plNext').addEventListener('click',function(){playPl(djCurIdx+1);});
  $('rngDjVol').addEventListener('input',function(e){$('lblDjVol').textContent=e.target.value+'%';if(bcDjGain)bcDjGain.gain.value=(S.micOn?0.15:1)*parseInt(e.target.value)/100;});
-
-/* Efektler */
 document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(){playFx(b.dataset.fx);});});
+document.querySelectorAll('.voice-fx').forEach(function(b){b.addEventListener('click',function(){setVoiceEffect(b.dataset.voice);});});
  $('btnRec').addEventListener('click',toggleRec);$('btnRecDl').addEventListener('click',dlRec);
  $('btnAd').addEventListener('click',toggleAd);
  $('btnSchAdd').addEventListener('click',addSchRow);$('btnSchSave').addEventListener('click',saveSch);
 resizeCv($('cvBc'));}
-
-/* === YAYIN BASLAT/DURDUR === */
 function toggleBc(){
 if(S.broadcasting){stopBc();return;}
 var devId=$('selMic').value;var cons=(devId&&devId!=='')?{audio:{deviceId:{exact:devId}}}:{audio:true};
@@ -327,9 +319,18 @@ bcMic=stream;bcAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
 bcAnalyser=bcAudioCtx.createAnalyser();bcAnalyser.fftSize=128;bcAnalyser.smoothingTimeConstant=0.8;
 bcGain=bcAudioCtx.createGain();bcGain.gain.value=0;
 bcSrc=bcAudioCtx.createMediaStreamSource(bcMic);bcSrc.connect(bcGain);
-bcMixGain=bcAudioCtx.createGain();bcMixGain.gain.value=1;bcGain.connect(bcMixGain);bcMixGain.connect(bcAnalyser);
+bcMixGain=bcAudioCtx.createGain();bcMixGain.gain.value=1;
+voiceFilter=bcAudioCtx.createBiquadFilter();voiceFilter.type='allpass';
+voiceDelay=bcAudioCtx.createDelay(1.0);voiceDelay.delayTime.value=0;
+voiceDelayFb=bcAudioCtx.createGain();voiceDelayFb.gain.value=0;
+voiceModOsc=bcAudioCtx.createOscillator();voiceModOsc.type='sine';voiceModOsc.frequency.value=150;voiceModOsc.start();
+voiceModGain=bcAudioCtx.createGain();voiceModGain.gain.value=1.0;
+bcGain.connect(voiceFilter);voiceFilter.connect(voiceDelay);
+voiceDelay.connect(voiceDelayFb);voiceDelayFb.connect(voiceDelay);
+voiceDelay.connect(voiceModGain);voiceModGain.connect(bcMixGain);bcMixGain.connect(bcAnalyser);
 bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;bcDjGain.connect(bcMixGain);
-djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
+djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
+djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
 bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
 bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1)ws.send(e.inputBuffer.getChannelData(0).buffer);};bcMixGain.connect(bcSendProc);
 bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
@@ -342,11 +343,13 @@ S.broadcasting=true;S.bcStart=Date.now();S.song=$('iSong').value.trim();
 S.timerInt=setInterval(function(){$('tmBc').textContent=fmtT((Date.now()-S.bcStart)/1000);if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);},1000);
 wsSend({type:'broadcast-start',song:S.song,sampleRate:bcAudioCtx.sampleRate,schedule:S.schedule});addSys('Yayin basladi!');vizBc();toast('Yayin baslatildi');
 }).catch(function(e){if(e.name==='NotAllowedError')toast('Mikrofon izni verilmedi!');else if(e.name==='NotFoundError')toast('Mikrofon bulunamadi!');else toast('Hata: '+e.message);});}
-
 function stopBc(){
 S.broadcasting=false;S.micOn=false;clearInterval(S.timerInt);
 if(djAudio){djAudio.pause();djAudio.src='';}djPlaying=false;djCurIdx=-1;
 if(bcMic){bcMic.getTracks().forEach(function(t){t.stop();});bcMic=null;}
+if(voiceModOsc)try{voiceModOsc.stop();}catch(e){}
+[voiceFilter,voiceDelay,voiceDelayFb,voiceModGain].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});
+voiceFilter=voiceDelay=voiceDelayFb=voiceModOsc=voiceModGain=null;voiceEffect='normal';
 [bcSendProc,bcSilent,bcStreamDest].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});bcSendProc=null;bcSilent=null;bcStreamDest=null;
 if(bcRecorder&&S.recording)stopRecInt();
 if(bcAudioCtx)bcAudioCtx.close();bcAudioCtx=bcAnalyser=bcGain=bcMixGain=bcDjGain=bcDjSource=bcFxGain=null;
@@ -357,71 +360,52 @@ if(bcRafId){cancelAnimationFrame(bcRafId);bcRafId=null;}
  $('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('fStatus').textContent='Yayin durduruldu';
  $('vuFL').style.height='0%';$('vuFR').style.height='0%';$('vuPL').style.bottom='0%';$('vuPR').style.bottom='0%';bcPeakL=bcPeakR=0;clearCv($('cvBc'));renderPl();
 wsSend({type:'broadcast-stop'});addSys('Yayin sona erdi');toast('Yayin durduruldu');}
-
-/* === MIC TOGGLE === */
 function toggleMic(){if(!S.broadcasting)return;S.micOn=!S.micOn;if(S.micOn){bcGain.gain.value=parseInt($('rngGain').value)/100;if(bcDjGain)bcDjGain.gain.value=0.15*parseInt($('rngDjVol').value)/100;$('btnMic').innerHTML='<i class="fas fa-microphone mr-1"></i>MIC ACIK';$('btnMic').classList.add('stop');}else{bcGain.gain.value=0;if(bcDjGain)bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;$('btnMic').innerHTML='<i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI';$('btnMic').classList.remove('stop');}}
-
-/* === AUTO DJ === */
 function addFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('audio/'))continue;var url=URL.createObjectURL(files[i]);var name=files[i].name.replace(/\.[^.]+$/,'');djPlaylist.push({name:name,url:url,duration:0});(function(idx){var a=new Audio();a.src=djPlaylist[idx].url;a.addEventListener('loadedmetadata',function(){djPlaylist[idx].duration=a.duration;renderPl();});})(djPlaylist.length-1);}renderPl();toast(djPlaylist.length+' parca eklendi');}
 function renderPl(){var c=$('plList'),e=$('plEmpty');if(!djPlaylist.length){c.innerHTML='';e.classList.remove('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=true;return;}e.classList.add('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=!S.broadcasting;var h='';for(var i=0;i<djPlaylist.length;i++){var p=djPlaylist[i],a=i===djCurIdx;h+='<div class="pl-item'+(a?' playing':'')+'" data-idx="'+i+'"><span class="pl-idx">'+(a?'<i class="fas fa-volume-up" style="color:var(--accent);font-size:10px"></i>':(i+1))+'</span><span class="pl-name">'+esc(p.name)+'</span><span class="pl-dur">'+(p.duration>0?fmtM(p.duration):'--:--')+'</span><span class="pl-del" data-del="'+i+'"><i class="fas fa-times"></i></span></div>';}c.innerHTML=h;c.querySelectorAll('.pl-item').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('.pl-del'))return;playPl(parseInt(el.dataset.idx));});});c.querySelectorAll('.pl-del').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var idx=parseInt(el.dataset.del);if(idx===djCurIdx){djAudio.pause();djPlaying=false;djCurIdx=-1;}else if(idx<djCurIdx)djCurIdx--;URL.revokeObjectURL(djPlaylist[idx].url);djPlaylist.splice(idx,1);renderPl();});});$('djNow').textContent=djCurIdx>=0&&djCurIdx<djPlaylist.length?'Calan: '+djPlaylist[djCurIdx].name:'';}
 function playPl(idx){if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length)return;djCurIdx=idx;djAudio.src=djPlaylist[idx].url;djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';renderPl();S.song=djPlaylist[idx].name;$('iSong').value=S.song;wsSend({type:'song-update',song:S.song});}
 function toggleDj(){if(!S.broadcasting)return;if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';wsSend({type:'song-update',song:''});}else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';S.song=djPlaylist[djCurIdx].name;wsSend({type:'song-update',song:S.song});}else if(djPlaylist.length)playPl(0);}
-
-/* === EFEKTLER === */
+function setVoiceEffect(fx){voiceEffect=fx;voiceFilter.type='allpass';voiceDelay.delayTime.value=0;voiceDelayFb.gain.value=0;try{voiceModOsc.disconnect();}catch(e){}voiceModGain.gain.value=1.0;switch(fx){case'normal':break;case'telefon':voiceFilter.type='highpass';voiceFilter.frequency.value=1200;voiceFilter.Q.value=1;break;case'radyo':voiceFilter.type='lowpass';voiceFilter.frequency.value=2500;voiceFilter.Q.value=5;break;case'robot':voiceModOsc.connect(voiceModGain.gain);voiceModOsc.frequency.value=150;break;case'yanki':voiceDelay.delayTime.value=.25;voiceDelayFb.gain.value=.4;break;case'derin':voiceFilter.type='lowpass';voiceFilter.frequency.value=800;voiceFilter.Q.value=2;break;}document.querySelectorAll('.voice-fx').forEach(function(b){b.classList.toggle('voice-active',b.dataset.voice===fx);});toast('Ses efekti: '+fx);}
+function mkNoise(dur){var sr=bcAudioCtx.sampleRate,len=Math.floor(sr*dur),buf=bcAudioCtx.createBuffer(1,len,sr),d=buf.getChannelData(0);for(var i=0;i<len;i++)d[i]=Math.random()*2-1;return buf;}
 function playFx(type){if(!bcAudioCtx||!bcFxGain)return;var t=bcAudioCtx.currentTime;
-if(type==='jingle1')mkOsc(t,[261.63,329.63,392,523.25],[0,.12,.24,.36],[.3,.3,.3,.3],.7);
-else if(type==='jingle2')mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.1,.2,.3],[.25,.25,.25,.25],.6);
-else if(type==='bell'){var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(1200,t);o.frequency.exponentialRampToValueAtTime(600,t+.5);g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+1);o.connect(g);g.connect(bcFxGain);o.start(t);o.stop(t+1);}
-else if(type==='alarm'){for(var i=0;i<6;i++){var o2=bcAudioCtx.createOscillator(),g2=bcAudioCtx.createGain();o2.type='square';o2.frequency.value=i%2?600:800;g2.gain.setValueAtTime(.2,t+i*.15);g2.gain.setValueAtTime(0,t+i*.15+.12);o2.connect(g2);g2.connect(bcFxGain);o2.start(t+i*.15);o2.stop(t+i*.15+.15);}}
-else if(type==='sweep'){var o3=bcAudioCtx.createOscillator(),g3=bcAudioCtx.createGain();o3.type='sawtooth';o3.frequency.setValueAtTime(200,t);o3.frequency.exponentialRampToValueAtTime(2000,t+.8);g3.gain.setValueAtTime(.15,t);g3.gain.exponentialRampToValueAtTime(.001,t+1);o3.connect(g3);g3.connect(bcFxGain);o3.start(t);o3.stop(t+1);}
-else if(type==='hit'){var o4=bcAudioCtx.createOscillator(),g4=bcAudioCtx.createGain();o4.type='triangle';o4.frequency.setValueAtTime(150,t);o4.frequency.exponentialRampToValueAtTime(40,t+.3);g4.gain.setValueAtTime(.5,t);g4.gain.exponentialRampToValueAtTime(.001,t+.4);o4.connect(g4);g4.connect(bcFxGain);o4.start(t);o4.stop(t+.4);}}
+if(type==='jingle-short')mkOsc(t,[523.25,659.25,783.99],[0,.15,.3],[.35,.35,.5],.6);
+else if(type==='jingle-mid')mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.2,.4,.6],[.3,.3,.3,.5],1);
+else if(type==='jingle-long'){mkOsc(t,[261.63,329.63,392,466.16,523.25,659.25],[0,.4,.8,1.2,1.6,2],[.3,.3,.3,.3,.3,.5],1.5);var bs=bcAudioCtx.createOscillator();bs.type='sine';bs.frequency.value=130.81;var bg=bcAudioCtx.createGain();bg.gain.setValueAtTime(.2,t);bg.gain.exponentialRampToValueAtTime(.001,t+3.5);bs.connect(bg);bg.connect(bcFxGain);bs.start(t);bs.stop(t+3.5);}
+else if(type==='laugh'){for(var i=0;i<6;i++){var st=t+i*.2,src=bcAudioCtx.createBufferSource();src.buffer=mkNoise(.12);var bp=bcAudioCtx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1500+Math.random()*500;bp.Q.value=2;var g=bcAudioCtx.createGain();g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.25,st+.02);g.gain.exponentialRampToValueAtTime(.001,st+.1);src.connect(bp);bp.connect(g);g.connect(bcFxGain);src.start(st);src.stop(st+.12);}}
+else if(type==='clap'){for(var j=0;j<8;j++){var ct=t+j*.08+Math.random()*.03,cs=bcAudioCtx.createBufferSource();cs.buffer=mkNoise(.05);var hp=bcAudioCtx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1000;var cg=bcAudioCtx.createGain();cg.gain.setValueAtTime(0,ct);cg.gain.linearRampToValueAtTime(.3,ct+.005);cg.gain.exponentialRampToValueAtTime(.001,ct+.04);cs.connect(hp);hp.connect(cg);cg.connect(bcFxGain);cs.start(ct);cs.stop(ct+.05);}}
+else if(type==='horn'){var hd=1.5,h1=bcAudioCtx.createOscillator();h1.type='square';h1.frequency.value=350;var h2=bcAudioCtx.createOscillator();h2.type='square';h2.frequency.value=440;var hg=bcAudioCtx.createGain();hg.gain.setValueAtTime(0,t);hg.gain.linearRampToValueAtTime(.2,t+.05);hg.gain.setValueAtTime(.2,t+hd-.1);hg.gain.linearRampToValueAtTime(0,t+hd);h1.connect(hg);h2.connect(hg);hg.connect(bcFxGain);h1.start(t);h1.stop(t+hd);h2.start(t);h2.stop(t+hd);}
+else if(type==='cheer'){var cd=3,csrc=bcAudioCtx.createBufferSource();csrc.buffer=mkNoise(cd);var cbp=bcAudioCtx.createBiquadFilter();cbp.type='bandpass';cbp.frequency.value=2000;cbp.Q.value=.5;var clfo=bcAudioCtx.createOscillator();clfo.frequency.value=8;var clg=bcAudioCtx.createGain();clg.gain.value=.08;clfo.connect(clg);var cgg=bcAudioCtx.createGain();cgg.gain.setValueAtTime(0,t);cgg.gain.linearRampToValueAtTime(.2,t+.3);cgg.gain.setValueAtTime(.2,t+cd-.3);cgg.gain.linearRampToValueAtTime(0,t+cd);clg.connect(cgg.gain);clfo.start(t);clfo.stop(t+cd);csrc.connect(cbp);cbp.connect(cgg);cgg.connect(bcFxGain);csrc.start(t);csrc.stop(t+cd);}
+else if(type==='rain'){var rd=4,rs=bcAudioCtx.createBufferSource();rs.buffer=mkNoise(rd);var rbp=bcAudioCtx.createBiquadFilter();rbp.type='bandpass';rbp.frequency.value=3000;rbp.Q.value=.5;var rg=bcAudioCtx.createGain();rg.gain.setValueAtTime(0,t);rg.gain.linearRampToValueAtTime(.15,t+.3);rg.gain.setValueAtTime(.15,t+rd-.3);rg.gain.linearRampToValueAtTime(0,t+rd);rs.connect(rbp);rbp.connect(rg);rg.connect(bcFxGain);rs.start(t);rs.stop(t+rd);}
+else if(type==='thunder'){var td=3,ts=bcAudioCtx.createBufferSource();ts.buffer=mkNoise(td);var tlp=bcAudioCtx.createBiquadFilter();tlp.type='lowpass';tlp.frequency.value=200;var tg=bcAudioCtx.createGain();tg.gain.setValueAtTime(0,t);tg.gain.linearRampToValueAtTime(.5,t+.05);tg.gain.exponentialRampToValueAtTime(.1,t+.5);tg.gain.exponentialRampToValueAtTime(.001,t+td);ts.connect(tlp);tlp.connect(tg);tg.connect(bcFxGain);ts.start(t);ts.stop(t+td);}
+else if(type==='birds'){var bn=8+Math.floor(Math.random()*5);for(var k=0;k<bn;k++){var bt=t+Math.random()*3.5,bf=2000+Math.random()*3000,bd=.05+Math.random()*.15,bo=bcAudioCtx.createOscillator();bo.type='sine';bo.frequency.setValueAtTime(bf,bt);bo.frequency.linearRampToValueAtTime(bf*(.8+Math.random()*.4),bt+bd);var bg2=bcAudioCtx.createGain();bg2.gain.setValueAtTime(0,bt);bg2.gain.linearRampToValueAtTime(.12,bt+.01);bg2.gain.exponentialRampToValueAtTime(.001,bt+bd);bo.connect(bg2);bg2.connect(bcFxGain);bo.start(bt);bo.stop(bt+bd+.05);}}
+else if(type==='ocean'){var od=4,os=bcAudioCtx.createBufferSource();os.buffer=mkNoise(od);var olp=bcAudioCtx.createBiquadFilter();olp.type='lowpass';olp.frequency.value=500;olp.Q.value=5;var olfo=bcAudioCtx.createOscillator();olfo.frequency.value=.3;var olg=bcAudioCtx.createGain();olg.gain.value=400;olfo.connect(olg);olg.connect(olp.frequency);var og=bcAudioCtx.createGain();og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.2,t+.5);og.gain.setValueAtTime(.2,t+od-.5);og.gain.linearRampToValueAtTime(0,t+od);olfo.start(t);olfo.stop(t+od);os.connect(olp);olp.connect(og);og.connect(bcFxGain);os.start(t);os.stop(t+od);}}
 function mkOsc(t,freqs,dels,vols,dur){for(var i=0;i<freqs.length;i++){var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();o.type='sine';o.frequency.value=freqs[i];g.gain.setValueAtTime(0,t+dels[i]);g.gain.linearRampToValueAtTime(vols[i],t+dels[i]+.02);g.gain.exponentialRampToValueAtTime(.001,t+dels[i]+dur);o.connect(g);g.connect(bcFxGain);o.start(t+dels[i]);o.stop(t+dels[i]+dur+.05);}}
-
-/* === KAYIT === */
 function toggleRec(){if(!S.broadcasting||!bcStreamDest)return;if(!S.recording)startRec();else stopRecInt();}
 function startRec(){bcRecChunks=[];bcRecorder=new MediaRecorder(bcStreamDest.stream,{mimeType:'audio/webm'});bcRecorder.ondataavailable=function(e){if(e.data.size>0)bcRecChunks.push(e.data);};bcRecorder.onstop=function(){$('btnRecDl').classList.remove('hidden');};bcRecorder.start();S.recording=true;$('btnRec').innerHTML='<i class="fas fa-stop mr-1"></i>KAYIT DURDUR';$('btnRec').classList.remove('btn-red');$('btnRec').classList.add('stop');$('recInd').classList.remove('hidden');toast('Kayit basladi');}
 function stopRecInt(){if(bcRecorder&&bcRecorder.state!=='inactive')bcRecorder.stop();S.recording=false;$('btnRec').innerHTML='<i class="fas fa-circle mr-1"></i>KAYIT BASLAT';$('btnRec').classList.add('btn-red');$('btnRec').classList.remove('stop');$('recInd').classList.add('hidden');}
 function dlRec(){if(!bcRecChunks.length)return;var blob=new Blob(bcRecChunks,{type:'audio/webm'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='radyo-'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.webm';a.click();URL.revokeObjectURL(a.href);toast('Kayit indirildi');}
-
-/* === REKLAM === */
-function toggleAd(){if(S.adRunning){clearInterval(S.adInt);S.adRunning=false;S.adSeconds=0;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';return;}S.adSeconds=parseInt($('iAdTime').value)||30;S.adRunning=true;$('btnAd').innerHTML='<i class="fas fa-stop mr-1"></i>DURDUR';$('adCount').textContent=fmtM(S.adSeconds);S.adInt=setInterval(function(){S.adSeconds--;$('adCount').textContent=fmtM(Math.max(0,S.adSeconds));if(S.adSeconds<=0){clearInterval(S.adInt);S.adRunning=false;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';playFx('jingle1');toast('Reklam arasi bitti!');}},1000);playFx('alarm');toast('Reklam arasi basladi');}
-
-/* === ISTEKLER === */
+function toggleAd(){if(S.adRunning){clearInterval(S.adInt);S.adRunning=false;S.adSeconds=0;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';return;}S.adSeconds=parseInt($('iAdTime').value)||30;S.adRunning=true;$('btnAd').innerHTML='<i class="fas fa-stop mr-1"></i>DURDUR';$('adCount').textContent=fmtM(S.adSeconds);S.adInt=setInterval(function(){S.adSeconds--;$('adCount').textContent=fmtM(Math.max(0,S.adSeconds));if(S.adSeconds<=0){clearInterval(S.adInt);S.adRunning=false;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';playFx('jingle-short');toast('Reklam arasi bitti!');}},1000);playFx('alarm');toast('Reklam arasi basladi');}
 function renderReqs(queue){var c=$('reqList'),e=$('reqEmpty');if(!queue||!queue.length){c.innerHTML='';e.classList.remove('hidden');$('reqBadge').classList.add('hidden');return;}e.classList.add('hidden');$('reqBadge').classList.remove('hidden');$('reqBadge').textContent=queue.length;var h='';for(var i=0;i<queue.length;i++){var r=queue[i];h+='<div class="req-item"><div class="flex-1"><div class="text-sm font-semibold">'+esc(r.nick)+'</div><div class="text-xs" style="color:var(--muted)">'+esc(r.song)+'</div></div><button class="btn btn-sm btn-green" style="padding:4px 10px;font-size:10px" data-aid="'+r.id+'" data-song="'+esc(r.song)+'"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-red" style="padding:4px 10px;font-size:10px" data-rid="'+r.id+'"><i class="fas fa-times"></i></button><button class="btn btn-sm btn-ghost" style="padding:4px 8px;font-size:10px" data-bid="'+esc(r.nick)+'" title="At"><i class="fas fa-ban"></i></button></div>';}c.innerHTML=h;c.querySelectorAll('[data-aid]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'request-action',requestId:parseFloat(b.dataset.aid),accepted:true,song:b.dataset.song});});});c.querySelectorAll('[data-rid]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'request-action',requestId:parseFloat(b.dataset.rid),accepted:false});});});c.querySelectorAll('[data-bid]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'block-listener',nick:b.dataset.bid});toast(b.dataset.bid+' atildi');});});}
-
-/* === PROGRAM === */
 function addSchRow(){var tr=document.createElement('tr');tr.innerHTML='<td><input class="sch-inp sch-time" type="time" value="12:00" style="width:90px"></td><td><input class="sch-inp sch-name" placeholder="Program adi" style="width:100%"></td><td><button class="btn btn-sm btn-ghost sch-del" style="padding:4px 8px"><i class="fas fa-times"></i></button></td>';$('schBody').appendChild(tr);tr.querySelector('.sch-del').addEventListener('click',function(){tr.remove();});}
 function saveSch(){var rows=$('schBody').querySelectorAll('tr'),sch=[];rows.forEach(function(tr){var time=tr.querySelector('.sch-time').value,name=tr.querySelector('.sch-name').value.trim();if(time&&name)sch.push({time:time,name:name});});S.schedule=sch;wsSend({type:'update-schedule',schedule:sch});toast('Program kaydedildi');}
 function renderSch(data,isBc){var tb=isBc?$('schBody'):$('schBodyLs');tb.innerHTML='';if(!data||!data.length){tb.innerHTML='<tr><td colspan="'+(isBc?3:2)+'" class="text-center py-4" style="color:var(--muted)">Program yok</td></tr>';return;}var now=new Date(),nowMin=now.getHours()*60+now.getMinutes();for(var i=0;i<data.length;i++){var p=data[i],pts=p.time.split(':'),min=parseInt(pts[0])*60+parseInt(pts[1]);var isCur=nowMin>=min&&(i===data.length-1||nowMin<parseInt(data[i+1].time.split(':')[0])*60+parseInt(data[i+1].time.split(':')[1]));var tr=document.createElement('tr');if(isCur)tr.className='current-row';tr.innerHTML='<td>'+p.time+'</td><td>'+esc(p.name)+'</td>'+(isBc?'<td></td>':'');tb.appendChild(tr);}}
-
-/* === DINLEYICI === */
 function setupLs(){$('btnLs').addEventListener('click',toggleLs);$('rngVol').addEventListener('input',function(){if(lsGain)lsGain.gain.value=parseInt($('rngVol').value)/100;});$('btnReqSend').addEventListener('click',sendReq);$('iReqSong').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendReq();}});resizeCv($('cvLs'));}
 function sendReq(){var t=$('iReqSong').value.trim();if(!t||!S.broadcastActive)return;wsSend({type:'request',song:t});$('iReqSong').value='';}
 function toggleLs(){if(S.listening){stopListening();return;}if(!S.broadcastActive)return;lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;lsPlayProc=lsAudioCtx.createScriptProcessor(2048,0,1);lsPlayProc.onaudioprocess=function(e){var out=e.outputBuffer.getChannelData(0);if(lsAudioQ.length>0){var ch=lsAudioQ.shift();for(var i=0;i<out.length;i++)out[i]=i<ch.length?ch[i]:0;}else{for(var j=0;j<out.length;j++)out[j]=0;}};lsPlayProc.connect(lsGain);lsGain.connect(lsAnalyser);lsAnalyser.connect(lsAudioCtx.destination);lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);lsAudioQ.length=0;S.listening=true;S.lsStart=Date.now();$('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);vizLs();}
 function stopListening(){S.listening=false;if(lsPlayProc)try{lsPlayProc.disconnect();}catch(e){}lsPlayProc=null;if(lsAudioCtx)lsAudioCtx.close();lsAudioCtx=lsAnalyser=lsGain=null;if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}clearInterval(S.timerInt);lsAudioQ.length=0;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('vinLs').classList.remove('spin');$('tmLs').textContent='00:00:00';$('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));}
-
-/* === VIZUALİZASYON === */
 function vizBc(){if(!S.broadcasting||!bcAnalyser)return;bcRafId=requestAnimationFrame(vizBc);bcAnalyser.getByteFrequencyData(bcFreqData);var len=bcFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=bcFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL','vuPL',Math.min(100,(sL/(len/2))*100*(.92+Math.random()*.16)),true);setVU('vuFR','vuPR',Math.min(100,(sR/(len/2))*100*(.92+Math.random()*.16)),false);drawBars($('cvBc'),bcFreqData);}
 function vizLs(){if(!S.listening||!lsAnalyser)return;lsRafId=requestAnimationFrame(vizLs);lsAnalyser.getByteFrequencyData(lsFreqData);var len=lsFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=lsFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL2','vuPL2',Math.min(100,(sL/(len/2))*100),true);setVU('vuFR2','vuPR2',Math.min(100,(sR/(len/2))*100),false);drawBars($('cvLs'),lsFreqData);}
 function setVU(fId,pId,v,isL){var f=$(fId),p=$(pId);if(!f||!p)return;var vv=Math.max(0,Math.min(100,v));f.style.height=vv+'%';var pk=isL?lsPeakL:lsPeakR;if(vv>pk)pk=vv;else pk=Math.max(0,pk-.6);if(isL)lsPeakL=pk;else lsPeakR=pk;p.style.bottom=pk+'%';}
 function drawBars(cv,data){if(!cv)return;var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.width/dpr,H=cv.height/dpr;ctx.clearRect(0,0,W,H);var cnt=data.length,gap=2,bw=Math.max(1,(W-gap*(cnt-1))/cnt);for(var i=0;i<cnt;i++){var val=data[i]/255,bh=Math.max(1,val*H*.85),x=i*(bw+gap),y=H-bh;var g=ctx.createLinearGradient(x,H,x,y);g.addColorStop(0,'#ff2d55');g.addColorStop(0.6,'#ff6b35');g.addColorStop(1,'#ff9500');ctx.fillStyle=g;var r=Math.min(bw/2,3);ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+bw-r,y);ctx.quadraticCurveTo(x+bw,y,x+bw,y+r);ctx.lineTo(x+bw,H);ctx.closePath();ctx.fill();var rg=ctx.createLinearGradient(x,H,x,H+bh*.25);rg.addColorStop(0,'rgba(255,45,85,0.18)');rg.addColorStop(1,'rgba(255,45,85,0)');ctx.fillStyle=rg;ctx.fillRect(x,H,bw,bh*.25);}}
 function clearCv(cv){if(!cv)return;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);}
 function resizeCv(cv){if(!cv||!cv.parentElement)return;var r=cv.parentElement.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cv.getContext('2d').scale(d,d);}
-
-/* === SOHBET === */
 function sendChat(){var inp=$('iChat'),t=inp.value.trim();if(!t)return;var m={type:'chat',nick:S.nick,text:t,time:Date.now()};wsSend(m);addChat(m);inp.value='';inp.focus();}
 function addChat(m){var c=$('chatMsgs'),r=document.createElement('div');r.className='mr';var col=nCol(m.nick),t=new Date(m.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}),me=m.nick===S.nick;r.innerHTML='<span class="mn" style="color:'+col+'">'+esc(m.nick)+(me?' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>':'')+'</span><span class="mt">'+esc(m.text)+'</span><span class="mtime">'+t+'</span>';c.appendChild(r);c.scrollTop=c.scrollHeight;}
 function addSys(t){var c=$('chatMsgs'),r=document.createElement('div');r.className='msys';r.textContent=t;c.appendChild(r);c.scrollTop=c.scrollHeight;}
-
-/* === MOBIL SOHBET === */
 function initChatMob(){$('btnChatTog').addEventListener('click',function(){$('chatP').classList.add('open');$('cov').classList.add('open');});$('btnChatX').addEventListener('click',closeCM);$('cov').addEventListener('click',closeCM);}
 function closeCM(){$('chatP').classList.remove('open');$('cov').classList.remove('open');}
-
-/* === PENCERE === */
 window.addEventListener('beforeunload',function(){if(S.broadcasting)wsSend({type:'broadcast-stop'});if(ws)ws.close();});
 window.addEventListener('resize',function(){if(S.mode==='broadcaster'&&!S.broadcasting)resizeCv($('cvBc'));if(S.mode==='listener')resizeCv($('cvLs'));});
-
-/* === BASLAT === */
 document.addEventListener('DOMContentLoaded',function(){
 wsConnect();initLogin();initTabs();initChatMob();initTheme();
  $('btnChatS').addEventListener('click',sendChat);
