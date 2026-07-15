@@ -3,26 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radyo Yayın Stüdyosu</title>
+    <title>Radyo DJ Stüdyo v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        bg:'#08080e',surface:'#0e0e18',card:'#151522',
-                        border:'#252538',accent:'#ff2d55',warm:'#ff9500',
-                        muted:'#555570',fg:'#dddde8'
-                    },
-                    fontFamily: {
-                        display:['Orbitron','sans-serif'],
-                        body:['Space Grotesk','sans-serif']
-                    }
-                }
-            }
-        }
+        tailwind.config={theme:{extend:{colors:{bg:'#08080e',surface:'#0e0e18',card:'#151522',border:'#252538',accent:'#ff2d55',warm:'#ff9500',muted:'#555570',fg:'#dddde8'},fontFamily:{display:['Orbitron','sans-serif'],body:['Space Grotesk','sans-serif']}}}}
     </script>
     <style>
         :root{--accent:#ff2d55;--warm:#ff9500;--bg:#08080e;--surface:#0e0e18;--card:#151522;--border:#252538;--fg:#dddde8;--muted:#555570}
@@ -56,6 +42,11 @@
         .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 28px rgba(255,45,85,.4)}
         .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
         .btn.stop{background:linear-gradient(135deg,#2a2a35,#1e1e28);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+        .btn-sm{padding:6px 14px;font-size:11px;letter-spacing:1px;border-radius:6px}
+        .btn-ghost{background:rgba(255,255,255,.06);box-shadow:none;border:1px solid var(--border);color:var(--fg)}
+        .btn-ghost:hover{background:rgba(255,255,255,.1);box-shadow:none;transform:none}
+        .btn-green{background:linear-gradient(135deg,#00c853,#00897b);box-shadow:0 4px 12px rgba(0,200,83,.2)}
+        .btn-red{background:linear-gradient(135deg,#ff1744,#c62828);box-shadow:0 4px 12px rgba(255,23,68,.2)}
         input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;width:100%}
         input[type=range]::-webkit-slider-track{height:4px;background:#1c1c2c;border-radius:2px}
         input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);margin-top:-5px;box-shadow:0 0 6px rgba(255,45,85,.4)}
@@ -78,15 +69,62 @@
         .toast-el.show{transform:translateX(-50%) translateY(0)}
         .hdr-live{border-top:2px solid var(--accent);box-shadow:0 2px 20px rgba(255,45,85,.15)}
         .cbtn{display:none}.cov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}.cov.open{display:block}
-        @media(max-width:860px){.chat-p{position:fixed;right:-320px;top:0;bottom:0;z-index:100;transition:right .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.5);height:100vh}.chat-p.open{right:0}.cbtn{display:flex}}
-        @media(max-width:600px){.vm{width:180px!important;height:180px!important}.vlm{width:56px!important;height:56px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:120px!important}.cg{flex-direction:column!important}}
-        @media(prefers-reduced-motion:reduce){.vinyl.spin,.login-bg,.float-orb,.on-air-dot.active{animation:none!important}.mr{animation:none!important}*{transition-duration:.01ms!important}}
-        .np-marquee{overflow:hidden;white-space:nowrap}.np-marquee span{display:inline-block;animation:mq 12s linear infinite}
-        @keyframes mq{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
         .conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
         .conn-dot.ok{background:#00e676;box-shadow:0 0 6px #00e676}
         .conn-dot.no{background:#ff1744;box-shadow:0 0 6px #ff1744}
         .conn-dot.wait{background:#ffea00;box-shadow:0 0 6px #ffea00;animation:pd 1s ease-in-out infinite}
+        /* Sekmeler */
+        .tab-bar{display:flex;gap:2px;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;overflow-x:auto;scrollbar-width:none}
+        .tab-bar::-webkit-scrollbar{display:none}
+        .tab-btn{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap;font-family:'Space Grotesk',sans-serif}
+        .tab-btn:hover{color:var(--fg);background:rgba(255,255,255,.04)}
+        .tab-btn.act{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(255,45,85,.3)}
+        .tab-content{display:none}.tab-content.act{display:block}
+        /* Playlist */
+        .pl-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+        .pl-item:hover{background:rgba(255,255,255,.04)}
+        .pl-item.playing{background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.2)}
+        .pl-item .pl-idx{font-size:11px;color:var(--muted);min-width:20px;text-align:center}
+        .pl-item .pl-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .pl-item .pl-dur{font-size:11px;color:var(--muted);min-width:36px;text-align:right}
+        .pl-item .pl-del{color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s}
+        .pl-item .pl-del:hover{color:#ff1744}
+        /* Efekt butonlari */
+        .fx-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02)}
+        .fx-btn:hover{border-color:var(--accent);background:rgba(255,45,85,.06);transform:scale(1.05)}
+        .fx-btn:active{transform:scale(.95)}
+        .fx-btn .fx-icon{font-size:20px;margin-bottom:4px}
+        .fx-btn .fx-name{font-size:10px;font-weight:600;color:var(--muted)}
+        /* Istek */
+        .req-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:6px}
+        /* Program */
+        .sch-table{width:100%;border-collapse:collapse;font-size:12px}
+        .sch-table th{text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-size:11px}
+        .sch-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04)}
+        .sch-table tr.current-row{background:rgba(255,45,85,.08)}
+        .sch-table tr.current-row td{color:var(--accent);font-weight:600}
+        .sch-inp{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg);padding:6px 8px;border-radius:6px;font-size:12px;outline:none;font-family:'Space Grotesk',sans-serif}
+        .sch-inp:focus{border-color:var(--accent)}
+        /* Stat */
+        .stat-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+        .stat-val{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--accent)}
+        .stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+        /* Kayit */
+        .rec-dot{width:10px;height:10px;border-radius:50%;background:#ff1744;animation:pd 1s ease-in-out infinite}
+        /* Tema */
+        .theme-pop{position:absolute;top:100%;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+        .theme-pop.open{display:flex;gap:8px}
+        .theme-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s}
+        .theme-dot:hover{transform:scale(1.2)}
+        .theme-dot.act{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.3)}
+        /* Dosya yukleme */
+        .drop-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s}
+        .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(255,45,85,.04)}
+        @media(max-width:860px){.chat-p{position:fixed;right:-320px;top:0;bottom:0;z-index:100;transition:right .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.5);height:100vh}.chat-p.open{right:0}.cbtn{display:flex}}
+        @media(max-width:600px){.vm{width:160px!important;height:160px!important}.vlm{width:50px!important;height:50px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:100px!important}.cg{flex-direction:column!important}.fx-grid{grid-template-columns:repeat(3,1fr)!important}}
+        @media(prefers-reduced-motion:reduce){.vinyl.spin,.login-bg,.float-orb,.on-air-dot.active,.rec-dot{animation:none!important}.mr{animation:none!important}*{transition-duration:.01ms!important}}
+        .np-marquee{overflow:hidden;white-space:nowrap}.np-marquee span{display:inline-block;animation:mq 12s linear infinite}
+        @keyframes mq{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
     </style>
 </head>
 <body class="bg-atm">
@@ -102,17 +140,16 @@
     <div class="float-orb" style="width:5px;height:5px;background:var(--accent);opacity:.18;top:30%;left:75%;animation-delay:-6s" aria-hidden="true"></div>
     <div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
         <h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
-        <p class="text-center text-sm mb-7" style="color:var(--muted)">Coklu cihaz canli yayin</p>
+        <p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
         <div class="space-y-3 mb-6">
             <input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30">
             <input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20">
         </div>
         <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">Mikrofon ile yayin</div></div>
+            <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
             <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
         </div>
         <button id="btnGo" class="btn w-full" disabled>YAYINA BASLA</button>
-        <p class="text-center mt-4" style="font-size:11px;color:var(--muted)"><i class="fas fa-globe"></i> Farkli cihazlardan ayni radyo adiyla baglanin</p>
     </div>
 </section>
 
@@ -120,67 +157,197 @@
 <div id="app" class="hidden flex flex-col h-screen">
     <header id="hdr" class="flex items-center justify-between px-5 py-3 border-b" style="border-color:var(--border);background:var(--surface);min-height:54px">
         <div class="flex items-center gap-3">
-            <div id="connDot" class="conn-dot wait" title="Baglanti durumu"></div>
-            <span id="hdrName" class="font-display text-sm font-bold tracking-wider truncate max-w-[180px]"></span>
+            <div id="connDot" class="conn-dot wait"></div>
+            <span id="hdrName" class="font-display text-sm font-bold tracking-wider truncate max-w-[160px]"></span>
             <span id="hdrRole" class="badge hidden"></span>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             <div class="flex items-center gap-2">
                 <div id="oaDot" class="on-air-dot"></div>
-                <span id="oaText" class="text-xs font-semibold tracking-wide" style="color:var(--muted)">YAYIN DURDURULDU</span>
+                <span id="oaText" class="text-xs font-semibold tracking-wide" style="color:var(--muted)">OFFLINE</span>
             </div>
             <span id="hdrLis" class="badge"><i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>0</span>
+            <div style="position:relative">
+                <button id="btnTheme" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px" aria-label="Tema"><i class="fas fa-palette"></i></button>
+                <div id="themePop" class="theme-pop">
+                    <div class="theme-dot act" data-t="kirmizi" style="background:#ff2d55" title="Kirmizi"></div>
+                    <div class="theme-dot" data-t="mavi" style="background:#4d96ff" title="Mavi"></div>
+                    <div class="theme-dot" data-t="yesil" style="background:#00e676" title="Yesil"></div>
+                    <div class="theme-dot" data-t="mor" style="background:#cc5de8" title="Mor"></div>
+                    <div class="theme-dot" data-t="turuncu" style="background:#ff9500" title="Turuncu"></div>
+                </div>
+            </div>
             <button id="btnChatTog" class="cbtn items-center justify-center w-9 h-9 rounded-lg border text-sm" style="border-color:var(--border);color:var(--muted);background:var(--card)" aria-label="Sohbet"><i class="fas fa-comments"></i></button>
         </div>
     </header>
+
     <div class="flex flex-1 overflow-hidden">
         <main class="flex-1 flex flex-col overflow-y-auto p-4 md:p-6">
-            <!-- YAYINCI -->
-            <div id="vBc" class="hidden flex-1 flex flex-col items-center gap-5">
-                <div class="flex items-center gap-6 md:gap-10 mt-2">
-                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:180px"><div class="vu-fill" id="vuFL" style="height:0%"></div><div class="vu-peak" id="vuPL" style="bottom:0%"></div></div><span class="font-display text-[10px] tracking-widest" style="color:var(--muted)">L</span></div>
-                    <div class="vinyl vm spin" id="vinBc" style="width:260px;height:260px"><div class="vinyl-lbl vlm" style="width:80px;height:80px;font-size:9px">LIVE</div><div class="vinyl-hole vhm" style="width:10px;height:10px"></div></div>
-                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:180px"><div class="vu-fill" id="vuFR" style="height:0%"></div><div class="vu-peak" id="vuPR" style="bottom:0%"></div></div><span class="font-display text-[10px] tracking-widest" style="color:var(--muted)">R</span></div>
+
+            <!-- ===== YAYINCI ===== -->
+            <div id="vBc" class="hidden flex-1 flex flex-col items-center gap-4">
+                <!-- VU + Vinil + Dalga -->
+                <div class="flex items-center gap-5 md:gap-8">
+                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL" style="height:0%"></div><div class="vu-peak" id="vuPL" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
+                    <div class="vinyl vm spin" id="vinBc" style="width:220px;height:220px"><div class="vinyl-lbl vlm" style="width:68px;height:68px;font-size:8px">LIVE</div><div class="vinyl-hole vhm" style="width:8px;height:8px"></div></div>
+                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFR" style="height:0%"></div><div class="vu-peak" id="vuPR" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">R</span></div>
                 </div>
-                <div class="w-full max-w-xl" style="height:90px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border);overflow:hidden"><canvas id="cvBc" style="width:100%;height:100%;display:block"></canvas></div>
+                <div class="w-full max-w-xl" style="height:70px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border);overflow:hidden"><canvas id="cvBc" style="width:100%;height:100%;display:block"></canvas></div>
+
+                <!-- Ana kontroller -->
                 <div class="w-full max-w-xl space-y-3">
-                    <div class="flex flex-wrap gap-3 cg" style="display:flex"><input id="iSong" class="inp flex-1" placeholder="Su an calan parca..." style="min-width:180px"><button id="btnBc" class="btn" style="white-space:nowrap">YAYINI BASLAT</button></div>
-                    <div class="flex flex-wrap items-center gap-4 cg" style="display:flex">
-                        <select id="selMic" class="inp" style="max-width:200px;flex:1;min-width:140px"><option>Mikrofon seciliyor...</option></select>
-                        <div class="flex items-center gap-2 flex-1" style="min-width:140px"><i class="fas fa-microphone text-xs" style="color:var(--muted)"></i><input id="rngGain" type="range" min="0" max="200" value="100"><span id="lblGain" class="text-xs font-mono" style="color:var(--muted);min-width:32px">100%</span></div>
-                        <div class="flex items-center gap-2"><i class="fas fa-clock text-xs" style="color:var(--muted)"></i><span id="tmBc" class="text-xs font-mono" style="color:var(--muted)">00:00:00</span></div>
+                    <div class="flex flex-wrap gap-2 cg" style="display:flex;align-items:center">
+                        <button id="btnBc" class="btn btn-sm" style="white-space:nowrap">YAYINI BASLAT</button>
+                        <button id="btnMic" class="btn btn-sm btn-ghost" disabled style="white-space:nowrap"><i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI</button>
+                        <input id="iSong" class="inp flex-1" placeholder="Su an calan parca..." style="min-width:140px" disabled>
+                        <div class="flex items-center gap-1" style="min-width:100px"><i class="fas fa-microphone text-xs" style="color:var(--muted)"></i><input id="rngGain" type="range" min="0" max="200" value="100"><span id="lblGain" class="text-xs font-mono" style="color:var(--muted);min-width:28px">100%</span></div>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs" style="color:var(--muted)">
+                        <span><i class="fas fa-clock mr-1"></i><span id="tmBc">00:00:00</span></span>
+                        <span id="recInd" class="hidden"><span class="rec-dot" style="display:inline-block;vertical-align:middle;margin-right:4px"></span>KAYIT</span>
+                    </div>
+                </div>
+
+                <!-- Sekmeler -->
+                <div class="w-full max-w-xl">
+                    <div class="tab-bar">
+                        <button class="tab-btn act" data-tab="dj">Auto DJ</button>
+                        <button class="tab-btn" data-tab="fx">Efektler</button>
+                        <button class="tab-btn" data-tab="req">Istekler <span id="reqBadge" class="hidden" style="background:var(--accent);color:#fff;border-radius:8px;padding:0 6px;font-size:10px;margin-left:4px">0</span></button>
+                        <button class="tab-btn" data-tab="sch">Program</button>
+                        <button class="tab-btn" data-tab="stat">Istatistik</button>
+                    </div>
+
+                    <!-- Tab: Auto DJ -->
+                    <div id="tab-dj" class="tab-content act mt-3">
+                        <div id="dropZone" class="drop-zone mb-3">
+                            <i class="fas fa-cloud-upload-alt text-2xl mb-2" style="color:var(--muted)"></i>
+                            <div class="text-sm" style="color:var(--muted)">Muzik dosyalarini surukleyin veya tiklayin</div>
+                            <input id="fileInp" type="file" accept="audio/*" multiple style="display:none">
+                        </div>
+                        <div id="plList" class="space-y-1 max-h-48 overflow-y-auto" style="scrollbar-width:thin;scrollbar-color:#2a2a3a transparent"></div>
+                        <div id="plEmpty" class="text-center py-6 text-xs" style="color:var(--muted)">Playlist bos</div>
+                        <div class="flex items-center gap-3 mt-3">
+                            <button id="plPrev" class="btn btn-sm btn-ghost" disabled><i class="fas fa-step-backward"></i></button>
+                            <button id="plPlay" class="btn btn-sm" disabled><i class="fas fa-play"></i></button>
+                            <button id="plNext" class="btn btn-sm btn-ghost" disabled><i class="fas fa-step-forward"></i></button>
+                            <div class="flex-1 flex items-center gap-2"><span class="text-xs" style="color:var(--muted)">Muzik</span><input id="rngDjVol" type="range" min="0" max="100" value="80"><span id="lblDjVol" class="text-xs font-mono" style="color:var(--muted);min-width:28px">80%</span></div>
+                        </div>
+                        <div id="djNow" class="mt-2 text-xs truncate" style="color:var(--muted)"></div>
+                    </div>
+
+                    <!-- Tab: Efektler -->
+                    <div id="tab-fx" class="tab-content mt-3">
+                        <div class="grid grid-cols-3 gap-2 fx-grid" style="grid-template-columns:repeat(3,1fr)">
+                            <div class="fx-btn" data-fx="jingle1"><div class="fx-icon" style="color:#ff2d55"><i class="fas fa-music"></i></div><div class="fx-name">Jingle 1</div></div>
+                            <div class="fx-btn" data-fx="jingle2"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-star"></i></div><div class="fx-name">Jingle 2</div></div>
+                            <div class="fx-btn" data-fx="bell"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-bell"></i></div><div class="fx-name">Zil</div></div>
+                            <div class="fx-btn" data-fx="alarm"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-exclamation-triangle"></i></div><div class="fx-name">Alarm</div></div>
+                            <div class="fx-btn" data-fx="sweep"><div class="fx-icon" style="color:#00e676"><i class="fas fa-wind"></i></div><div class="fx-name">Sweep</div></div>
+                            <div class="fx-btn" data-fx="hit"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-bolt"></i></div><div class="fx-name">Hit</div></div>
+                        </div>
+                        <div class="mt-4 p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)">
+                            <div class="text-xs font-semibold mb-2" style="color:var(--muted)">KAYIT</div>
+                            <div class="flex items-center gap-2">
+                                <button id="btnRec" class="btn btn-sm btn-red" disabled><i class="fas fa-circle mr-1"></i>KAYIT BASLAT</button>
+                                <button id="btnRecDl" class="btn btn-sm btn-ghost hidden"><i class="fas fa-download mr-1"></i>INDIR</button>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)">
+                            <div class="text-xs font-semibold mb-2" style="color:var(--muted)">REKLAM ARASI</div>
+                            <div class="flex items-center gap-2">
+                                <input id="iAdTime" class="inp" type="number" value="30" min="5" max="600" style="width:70px;padding:6px 8px;font-size:12px">
+                                <span class="text-xs" style="color:var(--muted)">sn</span>
+                                <button id="btnAd" class="btn btn-sm btn-ghost" disabled><i class="fas fa-play mr-1"></i>BASLAT</button>
+                                <span id="adCount" class="text-xs font-mono" style="color:var(--warm)">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Istekler -->
+                    <div id="tab-req" class="tab-content mt-3">
+                        <div id="reqList" class="space-y-1"></div>
+                        <div id="reqEmpty" class="text-center py-6 text-xs" style="color:var(--muted)">Bekleyen istek yok</div>
+                    </div>
+
+                    <!-- Tab: Program -->
+                    <div id="tab-sch" class="tab-content mt-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold" style="color:var(--muted)">GUNLUK PROGRAM</span>
+                            <button id="btnSchAdd" class="btn btn-sm btn-ghost"><i class="fas fa-plus mr-1"></i>Ekle</button>
+                        </div>
+                        <div class="overflow-x-auto rounded-lg" style="border:1px solid var(--border)">
+                            <table class="sch-table">
+                                <thead><tr><th>Saat</th><th>Program</th><th></th></tr></thead>
+                                <tbody id="schBody"></tbody>
+                            </table>
+                        </div>
+                        <button id="btnSchSave" class="btn btn-sm btn-green mt-2"><i class="fas fa-save mr-1"></i>KAYDET VE YAYINLA</button>
+                    </div>
+
+                    <!-- Tab: Istatistik -->
+                    <div id="tab-stat" class="tab-content mt-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="stat-card"><div class="stat-val" id="stCur">0</div><div class="stat-lbl">Su An Dinleyen</div></div>
+                            <div class="stat-card"><div class="stat-val" id="stPeak">0</div><div class="stat-lbl">En Yuksek</div></div>
+                            <div class="stat-card"><div class="stat-val" id="stTotal">0</div><div class="stat-lbl">Toplam Katilim</div></div>
+                            <div class="stat-card"><div class="stat-val" id="stDur">00:00</div><div class="stat-lbl">Yayin Suresi</div></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- DİNLEYİCİ -->
-            <div id="vLs" class="hidden flex-1 flex flex-col items-center gap-5">
-                <div class="flex items-center gap-6 md:gap-10 mt-2">
-                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:180px"><div class="vu-fill" id="vuFL2" style="height:0%"></div><div class="vu-peak" id="vuPL2" style="bottom:0%"></div></div><span class="font-display text-[10px] tracking-widest" style="color:var(--muted)">L</span></div>
-                    <div class="vinyl vm" id="vinLs" style="width:260px;height:260px"><div class="vinyl-lbl vlm" style="width:80px;height:80px;font-size:9px">RADIO</div><div class="vinyl-hole vhm" style="width:10px;height:10px"></div></div>
-                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:180px"><div class="vu-fill" id="vuFR2" style="height:0%"></div><div class="vu-peak" id="vuPR2" style="bottom:0%"></div></div><span class="font-display text-[10px] tracking-widest" style="color:var(--muted)">R</span></div>
+
+            <!-- ===== DİNLEYİCİ ===== -->
+            <div id="vLs" class="hidden flex-1 flex flex-col items-center gap-4">
+                <div class="flex items-center gap-5 md:gap-8">
+                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL2" style="height:0%"></div><div class="vu-peak" id="vuPL2" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
+                    <div class="vinyl vm" id="vinLs" style="width:220px;height:220px"><div class="vinyl-lbl vlm" style="width:68px;height:68px;font-size:8px">RADIO</div><div class="vinyl-hole vhm" style="width:8px;height:8px"></div></div>
+                    <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFR2" style="height:0%"></div><div class="vu-peak" id="vuPR2" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">R</span></div>
                 </div>
-                <div class="w-full max-w-xl" style="height:90px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border);overflow:hidden"><canvas id="cvLs" style="width:100%;height:100%;display:block"></canvas></div>
+                <div class="w-full max-w-xl" style="height:70px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border);overflow:hidden"><canvas id="cvLs" style="width:100%;height:100%;display:block"></canvas></div>
                 <div class="w-full max-w-xl rounded-xl p-4" style="background:rgba(255,255,255,.02);border:1px solid var(--border)">
-                    <div class="flex items-center gap-3 mb-3"><i class="fas fa-music text-sm" style="color:var(--accent)"></i><span class="text-xs font-semibold tracking-wide" style="color:var(--muted)">SU AN CALAN</span></div>
+                    <div class="flex items-center gap-3 mb-2"><i class="fas fa-music text-sm" style="color:var(--accent)"></i><span class="text-xs font-semibold tracking-wide" style="color:var(--muted)">SU AN CALAN</span></div>
                     <div class="np-marquee"><span id="npText" class="text-lg font-semibold">Yayin bekleniyor...</span></div>
                 </div>
-                <div class="w-full max-w-xl flex flex-wrap items-center gap-4 cg" style="display:flex">
-                    <button id="btnLs" class="btn" disabled style="white-space:nowrap"><i class="fas fa-play mr-2"></i>DINLE</button>
-                    <div class="flex items-center gap-2 flex-1" style="min-width:130px"><i class="fas fa-volume-up text-xs" style="color:var(--muted)"></i><input id="rngVol" type="range" min="0" max="100" value="75"></div>
-                    <div class="flex items-center gap-2"><i class="fas fa-clock text-xs" style="color:var(--muted)"></i><span id="tmLs" class="text-xs font-mono" style="color:var(--muted)">00:00:00</span></div>
+                <div class="w-full max-w-xl flex flex-wrap items-center gap-3 cg" style="display:flex">
+                    <button id="btnLs" class="btn btn-sm" disabled style="white-space:nowrap"><i class="fas fa-play mr-2"></i>DINLE</button>
+                    <div class="flex items-center gap-2 flex-1" style="min-width:120px"><i class="fas fa-volume-up text-xs" style="color:var(--muted)"></i><input id="rngVol" type="range" min="0" max="100" value="75"></div>
+                    <span class="text-xs" style="color:var(--muted)"><i class="fas fa-clock mr-1"></i><span id="tmLs">00:00:00</span></span>
+                </div>
+                <!-- Dinleyici sekmeler -->
+                <div class="w-full max-w-xl">
+                    <div class="tab-bar">
+                        <button class="tab-btn act" data-tab-ls="lsreq">Istek Gonder</button>
+                        <button class="tab-btn" data-tab-ls="lssch">Program</button>
+                    </div>
+                    <div id="tab-lsreq" class="tab-content act mt-3">
+                        <div class="flex gap-2">
+                            <input id="iReqSong" class="inp flex-1" placeholder="Parca adi yazin..." maxlength="100">
+                            <button id="btnReqSend" class="btn btn-sm" disabled><i class="fas fa-paper-plane mr-1"></i>GONDER</button>
+                        </div>
+                        <div id="reqSentMsg" class="text-xs mt-2 hidden" style="color:#00e676"><i class="fas fa-check mr-1"></i>Istek gonderildi!</div>
+                        <div id="reqAccMsg" class="text-xs mt-2 hidden" style="color:var(--warm)"><i class="fas fa-star mr-1"></i>Isteginiz kabul edildi: <span id="reqAccSong"></span></div>
+                    </div>
+                    <div id="tab-lssch" class="tab-content mt-3">
+                        <div class="overflow-x-auto rounded-lg" style="border:1px solid var(--border)">
+                            <table class="sch-table"><thead><tr><th>Saat</th><th>Program</th></tr></thead><tbody id="schBodyLs"></tbody></table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
+
         <!-- SOHBET -->
         <aside id="chatP" class="chat-p">
             <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)">
                 <h2 class="font-display text-xs font-bold tracking-widest">CANLI SOHBET</h2>
-                <div class="flex items-center gap-2"><span id="chatOn" class="badge">0</span><button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer" aria-label="Kapat"><i class="fas fa-times"></i></button></div>
+                <div class="flex items-center gap-2"><span id="chatOn" class="badge">0</span><button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer"><i class="fas fa-times"></i></button></div>
             </div>
             <div id="chatMsgs" class="chat-msgs" role="log" aria-live="polite"></div>
-            <div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesajinizi yazin..." maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
+            <div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesaj yazin..." maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
         </aside>
     </div>
+
     <footer class="flex items-center justify-between px-5 py-2 border-t text-xs" style="border-color:var(--border);background:var(--surface);color:var(--muted);min-height:38px">
         <span id="fStatus">Hazir</span>
         <span id="fConn">Baglaniyor...</span>
@@ -188,614 +355,548 @@
 </div>
 
 <script>
-/* ============================
-   DURUM
-============================ */
-var S = {
-    mode: null, station: '', nick: '',
-    broadcasting: false, listening: false,
-    song: '', listenerCount: 0,
-    bcStart: null, lsStart: null, timerInt: null,
-    broadcastActive: false, bcSampleRate: 44100
-};
+/* ================================================
+   1. DURUM
+================================================ */
+var S={mode:null,station:'',nick:'',broadcasting:false,listening:false,micOn:false,
+    song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,
+    broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,
+    schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
 
-/* ============================
-   SES - YAYINCI
-============================ */
-var bcAudioCtx = null, bcAnalyser = null, bcGain = null;
-var bcSrc = null, bcMic = null, bcSendProc = null, bcSilent = null;
-var bcFreqData = null, bcRafId = null, bcPeakL = 0, bcPeakR = 0;
+/* ================================================
+   2. SES - YAYINCI
+================================================ */
+var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,
+    bcSrc=null,bcMic=null,bcSendProc=null,bcSilent=null,bcStreamDest=null,
+    bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],
+    bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
 
-/* ============================
-   SES - DINLEYICI
-============================ */
-var lsAudioCtx = null, lsAnalyser = null, lsGain = null, lsPlayProc = null;
-var lsFreqData = null, lsRafId = null, lsPeakL = 0, lsPeakR = 0;
-var lsAudioQ = [];
-var LS_MAX_Q = 60;
+/* ================================================
+   3. SES - DINLEYICI
+================================================ */
+var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayProc=null,
+    lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0,lsAudioQ=[],LS_MAX_Q=60;
 
-/* ============================
-   WEBSOCKET
-============================ */
-var ws = null;
-var wsReconn = null;
+/* ================================================
+   4. AUTO DJ
+================================================ */
+var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 
-function wsConnect() {
-    var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(proto + '//' + location.host);
-    ws.binaryType = 'arraybuffer';
-    setConn('wait');
-
-    ws.onopen = function() {
-        setConn('ok');
-        $('fConn').textContent = 'Baglandi';
-        if (S.mode) doJoin();
-    };
-
-    ws.onclose = function() {
-        setConn('no');
-        $('fConn').textContent = 'Baglanti koptu, yeniden baglaniyor...';
-        clearTimeout(wsReconn);
-        wsReconn = setTimeout(wsConnect, 3000);
-    };
-
-    ws.onerror = function() {};
-
-    ws.onmessage = function(e) {
-        if (typeof e.data === 'string') {
-            try { handleMsg(JSON.parse(e.data)); } catch(err) {}
-        } else {
-            if (S.listening && lsAudioCtx) {
-                if (lsAudioQ.length < LS_MAX_Q) {
-                    lsAudioQ.push(new Float32Array(e.data));
-                }
-            }
-        }
+/* ================================================
+   5. WEBSOCKET
+================================================ */
+var ws=null,wsReconn=null;
+function wsConnect(){
+    var p=location.protocol==='https:'?'wss:':'ws:';
+    ws=new WebSocket(p+'//'+location.host);
+    ws.binaryType='arraybuffer';setConn('wait');
+    ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};
+    ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};
+    ws.onerror=function(){};
+    ws.onmessage=function(e){
+        if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}
+        else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q)lsAudioQ.push(new Float32Array(e.data));}
     };
 }
+function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
+function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0});}
+function setConn(s){$('connDot').className='conn-dot '+s;}
 
-function wsSend(obj) {
-    if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
+/* ================================================
+   6. YARDIMCILAR
+================================================ */
+var $=function(id){return document.getElementById(id);};
+var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
+function nCol(n){var h=0;for(var i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return nColors[Math.abs(h)%nColors.length];}
+function fmtT(s){return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function fmtM(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
+var _tt;function toast(m){var e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show');},2800);}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ================================================
+   7. TEMA
+================================================ */
+var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',warm:'#00b4d8'},yesil:{accent:'#00e676',warm:'#76ff03'},mor:{accent:'#cc5de8',warm:'#e040fb'},turuncu:{accent:'#ff9500',warm:'#ff6d00'}};
+function setTheme(n){
+    var t=themes[n];if(!t)return;
+    document.documentElement.style.setProperty('--accent',t.accent);
+    document.documentElement.style.setProperty('--warm',t.warm);
+    document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});
+    try{localStorage.setItem('radio-theme',n);}catch(e){}
 }
+function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
 
-function doJoin() {
-    wsSend({
-        type: 'join',
-        station: S.station,
-        nick: S.nick,
-        role: S.mode,
-        sampleRate: S.mode === 'broadcaster' ? 44100 : 0
+/* ================================================
+   8. GİRİŞ
+================================================ */
+function initLogin(){
+    var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo');
+    var check=function(){btn.disabled=!($('iStation').value.trim()&&$('iNick').value.trim()&&S.mode);};
+    cards.forEach(function(c){
+        var go=function(){cards.forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');S.mode=c.dataset.m;check();};
+        c.addEventListener('click',go);c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+    });
+    $('iStation').addEventListener('input',check);$('iNick').addEventListener('input',check);
+    btn.addEventListener('click',function(){
+        if(btn.disabled)return;
+        S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
+        $('login').classList.add('hidden');$('app').classList.remove('hidden');
+        $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');
+        r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
+        if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}
+        else{$('vLs').classList.remove('hidden');setupLs();}
+        $('fStatus').textContent=S.nick+' olarak giris yaptiniz';
+        if(ws&&ws.readyState===1)doJoin();
     });
 }
 
-function setConn(state) {
-    $('connDot').className = 'conn-dot ' + state;
-}
-
-/* ============================
-   YARDIMCILAR
-============================ */
-var $ = function(id) { return document.getElementById(id); };
-var nColors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
-function nCol(n) { var h=0; for(var i=0;i<n.length;i++) h=n.charCodeAt(i)+((h<<5)-h); return nColors[Math.abs(h)%nColors.length]; }
-function fmtT(s) { return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0'); }
-var _tt;
-function toast(m) { var e=$('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){e.classList.remove('show');},2800); }
-function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-
-/* ============================
-   GİRİŞ EKRANI
-============================ */
-function initLogin() {
-    var cards = document.querySelectorAll('.mode-card');
-    var btn = $('btnGo');
-    var check = function() {
-        btn.disabled = !($('iStation').value.trim() && $('iNick').value.trim() && S.mode);
-    };
-    cards.forEach(function(c) {
-        var go = function() {
-            cards.forEach(function(x){x.classList.remove('sel');});
-            c.classList.add('sel');
-            S.mode = c.dataset.m;
-            check();
-        };
-        c.addEventListener('click', go);
-        c.addEventListener('keydown', function(e) { if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
-    });
-    $('iStation').addEventListener('input', check);
-    $('iNick').addEventListener('input', check);
-
-    btn.addEventListener('click', function() {
-        if (btn.disabled) return;
-        S.station = $('iStation').value.trim();
-        S.nick = $('iNick').value.trim();
-
-        $('login').classList.add('hidden');
-        $('app').classList.remove('hidden');
-        $('hdrName').textContent = S.station;
-        var r = $('hdrRole');
-        r.classList.remove('hidden');
-        r.textContent = S.mode === 'broadcaster' ? 'YAYINCI' : 'DINLEYICI';
-
-        if (S.mode === 'broadcaster') {
-            $('vBc').classList.remove('hidden');
-            setupBc();
-        } else {
-            $('vLs').classList.remove('hidden');
-            setupLs();
-        }
-
-        $('fStatus').textContent = S.nick + ' olarak giris yaptiniz';
-
-        /* Sunucuya katilim mesajini gonder */
-        if (ws && ws.readyState === 1) {
-            doJoin();
-        }
-    });
-}
-
-/* ============================
-   MESAJ İŞLEYİCİ
-============================ */
-function handleMsg(m) {
-    switch(m.type) {
+/* ================================================
+   9. MESAJ İŞLEYİCİ
+================================================ */
+function handleMsg(m){
+    switch(m.type){
         case 'joined':
-            if (m.role === 'broadcaster') {
-                $('fStatus').textContent = S.nick + ' olarak baglandiniz';
-            } else {
-                $('fStatus').textContent = S.nick + ' olarak baglandiniz';
-                if (m.active) {
-                    S.bcSampleRate = m.sampleRate || 44100;
-                    showBcActive(m.song || '');
-                }
-                updCount(m.count || 0);
-            }
+            if(m.role==='broadcaster'){$('fStatus').textContent='Yayinci olarak baglandiniz';}
+            else{$('fStatus').textContent='Dinleyici olarak baglandiniz';if(m.active){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');}updCount(m.count||0);if(m.schedule)renderSchLs(m.schedule);}
             break;
-
         case 'broadcast-start':
-            if (S.mode === 'listener') {
-                S.bcSampleRate = m.sampleRate || 44100;
-                showBcActive(m.song || '');
-                addSys(m.nick + ' yayini baslatti');
-            }
+            if(S.mode==='listener'){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');addSys(m.nick+' yayini baslatti');if(m.schedule)renderSchLs(m.schedule);}
             break;
-
-        case 'broadcast-stop':
-            if (S.mode === 'listener') {
-                showBcStopped();
-                addSys('Yayin sona erdi');
-            }
-            break;
-
-        case 'song-update':
-            if (S.mode === 'listener') $('npText').textContent = m.song || '';
-            break;
-
-        case 'chat':
-            if (m.nick !== S.nick) addChat(m);
-            break;
-
-        case 'listener-update':
-            updCount(m.count || 0);
-            break;
+        case 'broadcast-stop':if(S.mode==='listener'){showBcStopped();addSys('Yayin sona erdi');}break;
+        case 'song-update':if(S.mode==='listener')$('npText').textContent=m.song||'';break;
+        case 'chat':if(m.nick!==S.nick)addChat(m);break;
+        case 'listener-update':updCount(m.count||0);if(m.stats){S.peak=m.stats.peak||0;S.totalJoined=m.stats.totalJoined||0;updStats();}break;
+        case 'system':addSys(m.text);break;
+        case 'new-request':renderReqs(m.queue);break;
+        case 'queue-update':renderReqs(m.queue);break;
+        case 'request-sent':$('reqSentMsg').classList.remove('hidden');setTimeout(function(){$('reqSentMsg').classList.add('hidden');},3000);break;
+        case 'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong').textContent=m.song;setTimeout(function(){$('reqAccMsg').classList.add('hidden');},5000);break;
+        case 'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
+        case 'schedule-update':if(S.mode==='listener')renderSchLs(m.schedule);break;
     }
 }
+function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
+function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
+function updCount(n){S.listenerCount=n;$('hdrLis').innerHTML='<i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>'+n;$('chatOn').textContent=n;}
+function updStats(){$('stCur').textContent=S.listenerCount;$('stPeak').textContent=S.peak;$('stTotal').textContent=S.totalJoined;if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);}
 
-function showBcActive(song) {
-    S.broadcastActive = true;
-    $('btnLs').disabled = false;
-    $('oaDot').classList.add('active');
-    $('oaText').textContent = 'CANLI';
-    $('oaText').style.color = 'var(--accent)';
-    $('hdr').classList.add('hdr-live');
-    if (song) $('npText').textContent = song;
+/* ================================================
+   10. SEKME SİSTEMİ
+================================================ */
+function initTabs(){
+    document.querySelectorAll('[data-tab]').forEach(function(b){b.addEventListener('click',function(){
+        var t=b.dataset.tab;
+        b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});
+        b.classList.add('act');
+        var parent=b.parentElement.parentElement;
+        parent.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});
+        $('tab-'+t).classList.add('act');
+    });});
+    document.querySelectorAll('[data-tab-ls]').forEach(function(b){b.addEventListener('click',function(){
+        var t=b.dataset.tabLs;
+        b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});
+        b.classList.add('act');
+        var parent=b.parentElement.parentElement;
+        parent.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});
+        $('tab-'+t).classList.add('act');
+    });});
 }
 
-function showBcStopped() {
-    S.broadcastActive = false;
-    stopListening();
-    $('btnLs').disabled = true;
-    $('btnLs').innerHTML = '<i class="fas fa-play mr-2"></i>DINLE';
-    $('oaDot').classList.remove('active');
-    $('oaText').textContent = 'YAYIN DURDURULDU';
-    $('oaText').style.color = 'var(--muted)';
-    $('hdr').classList.remove('hdr-live');
-    $('vinLs').classList.remove('spin');
-    $('npText').textContent = 'Yayin bekleniyor...';
-}
-
-function updCount(n) {
-    S.listenerCount = n;
-    $('hdrLis').innerHTML = '<i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>' + n;
-    $('chatOn').textContent = n;
-}
-
-/* ============================
-   YAYINCI KURULUM
-============================ */
-function setupBc() {
-    var sel = $('selMic');
-
-    navigator.mediaDevices.getUserMedia({audio: true}).then(function(tmp) {
+/* ================================================
+   11. YAYINCI KURULUM
+================================================ */
+function setupBc(){
+    var sel=$('selMic');
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(tmp){
         tmp.getTracks().forEach(function(t){t.stop();});
         return navigator.mediaDevices.enumerateDevices();
-    }).then(function(devs) {
-        sel.innerHTML = '';
-        var found = false;
-        devs.filter(function(d){return d.kind==='audioinput';}).forEach(function(d, i) {
-            var o = document.createElement('option');
-            o.value = d.deviceId;
-            o.textContent = d.label || ('Mikrofon ' + (i + 1));
-            sel.appendChild(o);
-            found = true;
+    }).then(function(devs){
+        sel.innerHTML='';var found=false;
+        devs.filter(function(d){return d.kind==='audioinput';}).forEach(function(d,i){
+            var o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Mikrofon '+(i+1));sel.appendChild(o);found=true;
         });
-        if (!found) sel.innerHTML = '<option>Mikrofon bulunamadi</option>';
-    }).catch(function(err) {
-        sel.innerHTML = '<option value="">Mikrofon erisimi gerekli</option>';
-        toast('Mikrofon izni verin ve sayfayi yenileyin');
-        console.error('Mic error:', err);
-    });
+        if(!found)sel.innerHTML='<option>Mikrofon bulunamadi</option>';
+    }).catch(function(){sel.innerHTML='<option value="">Mikrofon erisimi gerekli</option>';toast('Mikrofon izni verin ve sayfayi yenileyin');});
 
-    $('btnBc').addEventListener('click', toggleBc);
-    $('rngGain').addEventListener('input', function(e) {
-        var v = parseInt(e.target.value);
-        $('lblGain').textContent = v + '%';
-        if (bcGain) bcGain.gain.value = v / 100;
-    });
-    $('iSong').addEventListener('input', function(e) {
-        S.song = e.target.value.trim();
-        wsSend({type: 'song-update', song: S.song});
-    });
+    $('btnBc').addEventListener('click',toggleBc);
+    $('btnMic').addEventListener('click',toggleMic);
+    $('rngGain').addEventListener('input',function(e){var v=parseInt(e.target.value);$('lblGain').textContent=v+'%';if(bcGain)bcGain.gain.value=v/100;});
+
+    /* Auto DJ */
+    var dz=$('dropZone'),fi=$('fileInp');
+    dz.addEventListener('click',function(){fi.click();});
+    dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});
+    dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});
+    dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag');addFiles(e.dataTransfer.files);});
+    fi.addEventListener('change',function(){addFiles(fi.files);fi.value='';});
+
+    $('plPrev').addEventListener('click',function(){playPlTrack(djCurIdx-1);});
+    $('plPlay').addEventListener('click',toggleDjPlay);
+    $('plNext').addEventListener('click',function(){playPlTrack(djCurIdx+1);});
+    $('rngDjVol').addEventListener('input',function(e){$('lblDjVol').textContent=e.target.value+'%';if(bcDjGain)bcDjGain.gain.value=(S.micOn?0.15:1)*parseInt(e.target.value)/100;});
+
+    /* Efektler */
+    document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(){playFx(b.dataset.fx);});});
+    $('btnRec').addEventListener('click',toggleRec);
+    $('btnRecDl').addEventListener('click',downloadRec);
+    $('btnAd').addEventListener('click',toggleAd);
+
+    /* Istekler */
+    $('btnSchAdd').addEventListener('click',addSchRow);
+    $('btnSchSave').addEventListener('click',saveSch);
+
     resizeCv($('cvBc'));
 }
 
-/* ============================
-   YAYINCI BAŞLAT / DURDUR
-============================ */
-function toggleBc() {
-    if (S.broadcasting) { stopBc(); return; }
+/* ================================================
+   12. YAYINCI BAŞLAT/DURDUR
+================================================ */
+function toggleBc(){
+    if(S.broadcasting){stopBc();return;}
+    var devId=$('selMic').value;
+    var cons=(devId&&devId!=='')?{audio:{deviceId:{exact:devId}}}:{audio:true};
+    navigator.mediaDevices.getUserMedia(cons).then(function(stream){
+        bcMic=stream;
+        bcAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+        bcAnalyser=bcAudioCtx.createAnalyser();bcAnalyser.fftSize=128;bcAnalyser.smoothingTimeConstant=0.8;
 
-    var devId = $('selMic').value;
-    var cons = (devId && devId !== '') ? {audio:{deviceId:{exact:devId}}} : {audio:true};
-
-    navigator.mediaDevices.getUserMedia(cons).then(function(stream) {
-        bcMic = stream;
-
-        bcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        bcAnalyser = bcAudioCtx.createAnalyser();
-        bcAnalyser.fftSize = 128;
-        bcAnalyser.smoothingTimeConstant = 0.8;
-        bcGain = bcAudioCtx.createGain();
-        bcGain.gain.value = parseInt($('rngGain').value) / 100;
-
-        bcSrc = bcAudioCtx.createMediaStreamSource(bcMic);
-
-        /* Zincir: mic -> gain -> analyser (VU metre icin) */
+        /* Mikrofon zinciri */
+        bcGain=bcAudioCtx.createGain();bcGain.gain.value=0; /* mic baslangicta kapali */
+        bcSrc=bcAudioCtx.createMediaStreamSource(bcMic);
         bcSrc.connect(bcGain);
-        bcGain.connect(bcAnalyser);
 
-        /* Zincir: gain -> sendProc -> silentGain -> destination
-           (sendProc'un calismasi icin destination'a bagli olmali) */
-        bcSendProc = bcAudioCtx.createScriptProcessor(2048, 1, 1);
-        bcSendProc.onaudioprocess = function(e) {
-            if (ws && ws.readyState === 1) {
-                ws.send(e.inputBuffer.getChannelData(0).buffer);
-            }
+        /* Mix gain - her sey burada birlesir */
+        bcMixGain=bcAudioCtx.createGain();bcMixGain.gain.value=1;
+        bcGain.connect(bcMixGain);
+        bcMixGain.connect(bcAnalyser);
+
+        /* Auto DJ zinciri */
+        bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;
+        bcDjGain.connect(bcMixGain);
+        djAudio=new Audio();djAudio.crossOrigin='anonymous';
+        bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);
+        bcDjSource.connect(bcDjGain);
+        djAudio.addEventListener('ended',function(){if(djPlaying)playPlTrack(djCurIdx+1);});
+
+        /* Efekt zinciri */
+        bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;
+        bcFxGain.connect(bcMixGain);
+
+        /* Send processor (ses gonderme) */
+        bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);
+        bcSendProc.onaudioprocess=function(e){
+            if(ws&&ws.readyState===1)ws.send(e.inputBuffer.getChannelData(0).buffer);
         };
-        bcGain.connect(bcSendProc);
+        bcMixGain.connect(bcSendProc);
+        bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;
+        bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
 
-        bcSilent = bcAudioCtx.createGain();
-        bcSilent.gain.value = 0;
-        bcSendProc.connect(bcSilent);
-        bcSilent.connect(bcAudioCtx.destination);
+        /* Kayit icin stream dest */
+        bcStreamDest=bcAudioCtx.createMediaStreamDestination();
+        bcMixGain.connect(bcStreamDest);
 
-        bcFreqData = new Uint8Array(bcAnalyser.frequencyBinCount);
+        bcFreqData=new Uint8Array(bcAnalyser.frequencyBinCount);
+        S.broadcasting=true;S.bcStart=Date.now();S.song=$('iSong').value.trim();
 
-        S.broadcasting = true;
-        S.bcStart = Date.now();
-        S.song = $('iSong').value.trim();
+        $('btnBc').textContent='YAYINI DURDUR';$('btnBc').classList.add('stop');
+        $('btnMic').disabled=false;$('iSong').disabled=false;
+        $('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';
+        $('hdr').classList.add('hdr-live');$('fStatus').textContent='Yayin aktif';
+        $('btnRec').disabled=false;$('btnAd').disabled=false;
 
-        $('btnBc').textContent = 'YAYINI DURDUR';
-        $('btnBc').classList.add('stop');
-        $('oaDot').classList.add('active');
-        $('oaText').textContent = 'CANLI';
-        $('oaText').style.color = 'var(--accent)';
-        $('hdr').classList.add('hdr-live');
-        $('vinBc').classList.add('spin');
-        $('fStatus').textContent = 'Yayin aktif';
+        S.timerInt=setInterval(function(){
+            $('tmBc').textContent=fmtT((Date.now()-S.bcStart)/1000);
+            if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);
+        },1000);
 
-        S.timerInt = setInterval(function() {
-            $('tmBc').textContent = fmtT((Date.now() - S.bcStart) / 1000);
-        }, 1000);
-
-        wsSend({type:'broadcast-start', song:S.song, sampleRate:bcAudioCtx.sampleRate});
-        addSys('Yayin basladi!');
-        vizBc();
-        toast('Yayin baslatildi');
-
-    }).catch(function(err) {
-        if (err.name === 'NotAllowedError') toast('Mikrofon izni verilmedi!');
-        else if (err.name === 'NotFoundError') toast('Mikrofon bulunamadi!');
-        else toast('Hata: ' + err.message);
+        wsSend({type:'broadcast-start',song:S.song,sampleRate:bcAudioCtx.sampleRate,schedule:S.schedule});
+        addSys('Yayin basladi!');vizBc();toast('Yayin baslatildi');
+    }).catch(function(e){
+        if(e.name==='NotAllowedError')toast('Mikrofon izni verilmedi!');
+        else if(e.name==='NotFoundError')toast('Mikrofon bulunamadi!');
+        else toast('Hata: '+e.message);
     });
 }
 
-function stopBc() {
-    S.broadcasting = false;
-    clearInterval(S.timerInt);
-
-    if (bcMic) { bcMic.getTracks().forEach(function(t){t.stop();}); bcMic = null; }
-    if (bcSendProc) { try{bcSendProc.disconnect();}catch(e){} bcSendProc = null; }
-    if (bcSilent) { try{bcSilent.disconnect();}catch(e){} bcSilent = null; }
-    if (bcAudioCtx) { bcAudioCtx.close(); bcAudioCtx = null; }
-    if (bcRafId) { cancelAnimationFrame(bcRafId); bcRafId = null; }
-
-    $('btnBc').textContent = 'YAYINI BASLAT';
-    $('btnBc').classList.remove('stop');
-    $('oaDot').classList.remove('active');
-    $('oaText').textContent = 'YAYIN DURDURULDU';
-    $('oaText').style.color = 'var(--muted)';
-    $('hdr').classList.remove('hdr-live');
-    $('vinBc').classList.remove('spin');
-    $('fStatus').textContent = 'Yayin durduruldu';
-    $('vuFL').style.height = '0%';
-    $('vuFR').style.height = '0%';
-    $('vuPL').style.bottom = '0%';
-    $('vuPR').style.bottom = '0%';
-    bcPeakL = 0; bcPeakR = 0;
-    clearCv($('cvBc'));
-
-    wsSend({type:'broadcast-stop'});
-    addSys('Yayin sona erdi');
-    toast('Yayin durduruldu');
+function stopBc(){
+    S.broadcasting=false;S.micOn=false;clearInterval(S.timerInt);
+    if(djAudio){djAudio.pause();djAudio.src='';}djPlaying=false;djCurIdx=-1;
+    if(bcMic){bcMic.getTracks().forEach(function(t){t.stop();});bcMic=null;}
+    if(bcSendProc)try{bcSendProc.disconnect();}catch(e){}bcSendProc=null;
+    if(bcSilent)try{bcSilent.disconnect();}catch(e){}bcSilent=null;
+    if(bcStreamDest)try{bcStreamDest.disconnect();}catch(e){}bcStreamDest=null;
+    if(bcRecorder&&S.recording)stopRecInternal();
+    if(bcAudioCtx){bcAudioCtx.close();}bcAudioCtx=null;bcAnalyser=null;bcGain=null;bcMixGain=null;bcDjGain=null;bcDjSource=null;bcFxGain=null;
+    if(bcRafId){cancelAnimationFrame(bcRafId);bcRafId=null;}
+    $('btnBc').textContent='YAYINI BASLAT';$('btnBc').classList.remove('stop');
+    $('btnMic').disabled=true;$('btnMic').innerHTML='<i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI';$('btnMic').classList.remove('stop');
+    $('iSong').disabled=true;$('btnRec').disabled=true;$('btnAd').disabled=true;
+    $('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';
+    $('hdr').classList.remove('hdr-live');$('fStatus').textContent='Yayin durduruldu';
+    $('vuFL').style.height='0%';$('vuFR').style.height='0%';$('vuPL').style.bottom='0%';$('vuPR').style.bottom='0%';
+    bcPeakL=0;bcPeakR=0;clearCv($('cvBc'));renderPl();
+    wsSend({type:'broadcast-stop'});addSys('Yayin sona erdi');toast('Yayin durduruldu');
 }
 
-/* ============================
-   DİNLEYİCİ KURULUM
-============================ */
-function setupLs() {
-    $('btnLs').addEventListener('click', toggleLs);
-    $('rngVol').addEventListener('input', function() {
-        if (lsGain) lsGain.gain.value = parseInt($('rngVol').value) / 100;
+/* ================================================
+   13. MİKROFON TOGGLE
+================================================ */
+function toggleMic(){
+    if(!S.broadcasting)return;
+    S.micOn=!S.micOn;
+    if(S.micOn){
+        bcGain.gain.value=parseInt($('rngGain').value)/100;
+        if(bcDjGain)bcDjGain.gain.value=0.15*parseInt($('rngDjVol').value)/100; /* ducking */
+        $('btnMic').innerHTML='<i class="fas fa-microphone mr-1"></i>MIC ACIK';
+        $('btnMic').classList.add('stop');
+    }else{
+        bcGain.gain.value=0;
+        if(bcDjGain)bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;
+        $('btnMic').innerHTML='<i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI';
+        $('btnMic').classList.remove('stop');
+    }
+}
+
+/* ================================================
+   14. AUTO DJ
+================================================ */
+function addFiles(files){
+    for(var i=0;i<files.length;i++){
+        if(!files[i].type.startsWith('audio/'))continue;
+        var url=URL.createObjectURL(files[i]);
+        var name=files[i].name.replace(/\.[^.]+$/,'');
+        djPlaylist.push({name:name,url:url,duration:0,file:files[i]});
+        loadDuration(djPlaylist.length-1);
+    }
+    renderPl();
+    toast(djPlaylist.length+' parca eklendi');
+}
+function loadDuration(idx){
+    var a=new Audio();a.src=djPlaylist[idx].url;
+    a.addEventListener('loadedmetadata',function(){djPlaylist[idx].duration=a.duration;renderPl();});
+}
+function renderPl(){
+    var c=$('plList'),e=$('plEmpty');
+    if(djPlaylist.length===0){c.innerHTML='';e.classList.remove('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=true;return;}
+    e.classList.add('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=!S.broadcasting;
+    var html='';
+    for(var i=0;i<djPlaylist.length;i++){
+        var p=djPlaylist[i],active=i===djCurIdx;
+        html+='<div class="pl-item'+(active?' playing':'')+'" data-idx="'+i+'">';
+        html+='<span class="pl-idx">'+(active?'<i class="fas fa-volume-up" style="color:var(--accent);font-size:10px"></i>':(i+1))+'</span>';
+        html+='<span class="pl-name">'+esc(p.name)+'</span>';
+        html+='<span class="pl-dur">'+(p.duration>0?fmtM(p.duration):'--:--')+'</span>';
+        html+='<span class="pl-del" data-del="'+i+'"><i class="fas fa-times"></i></span>';
+        html+='</div>';
+    }
+    c.innerHTML=html;
+    c.querySelectorAll('.pl-item').forEach(function(el){
+        el.addEventListener('click',function(e){
+            if(e.target.closest('.pl-del'))return;
+            playPlTrack(parseInt(el.dataset.idx));
+        });
     });
+    c.querySelectorAll('.pl-del').forEach(function(el){
+        el.addEventListener('click',function(e){
+            e.stopPropagation();
+            var idx=parseInt(el.dataset.del);
+            if(idx===djCurIdx){djAudio.pause();djPlaying=false;djCurIdx=-1;}
+            else if(idx<djCurIdx)djCurIdx--;
+            URL.revokeObjectURL(djPlaylist[idx].url);
+            djPlaylist.splice(idx,1);renderPl();
+        });
+    });
+    if(djCurIdx>=0&&djCurIdx<djPlaylist.length)$('djNow').textContent='Calan: '+djPlaylist[djCurIdx].name;
+    else $('djNow').textContent='';
+}
+function playPlTrack(idx){
+    if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length)return;
+    djCurIdx=idx;djAudio.src=djPlaylist[idx].url;djAudio.play();djPlaying=true;
+    $('plPlay').innerHTML='<i class="fas fa-pause"></i>';renderPl();
+}
+function toggleDjPlay(){
+    if(!S.broadcasting)return;
+    if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';}
+    else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';}
+    else if(djPlaylist.length>0)playPlTrack(0);
+}
+
+/* ================================================
+   15. SES EFEKTLERİ
+================================================ */
+function playFx(type){
+    if(!bcAudioCtx||!bcFxGain)return;
+    var t=bcAudioCtx.currentTime;
+    switch(type){
+        case 'jingle1':
+            mkOsc(t,[261.63,329.63,392,523.25],[0,.12,.24,.36],[.3,.3,.3,.3],.7);
+            break;
+        case 'jingle2':
+            mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.1,.2,.3],[.25,.25,.25,.25],.6);
+            break;
+        case 'bell':
+            var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();
+            o.type='sine';o.frequency.setValueAtTime(1200,t);o.frequency.exponentialRampToValueAtTime(600,t+.5);
+            g.gain.setValueAtTime(.4,t);g.gain.exponentialRampToValueAtTime(.001,t+1);
+            o.connect(g);g.connect(bcFxGain);o.start(t);o.stop(t+1);
+            break;
+        case 'alarm':
+            for(var i=0;i<6;i++){
+                var o2=bcAudioCtx.createOscillator(),g2=bcAudioCtx.createGain();
+                o2.type='square';o2.frequency.value=i%2===0?800:600;
+                g2.gain.setValueAtTime(.2,t+i*.15);g2.gain.setValueAtTime(0,t+i*.15+.12);
+                o2.connect(g2);g2.connect(bcFxGain);o2.start(t+i*.15);o2.stop(t+i*.15+.15);
+            }
+            break;
+        case 'sweep':
+            var o3=bcAudioCtx.createOscillator(),g3=bcAudioCtx.createGain();
+            o3.type='sawtooth';o3.frequency.setValueAtTime(200,t);o3.frequency.exponentialRampToValueAtTime(2000,t+.8);
+            g3.gain.setValueAtTime(.15,t);g3.gain.exponentialRampToValueAtTime(.001,t+1);
+            o3.connect(g3);g3.connect(bcFxGain);o3.start(t);o3.stop(t+1);
+            break;
+        case 'hit':
+            var o4=bcAudioCtx.createOscillator(),g4=bcAudioCtx.createGain();
+            o4.type='triangle';o4.frequency.setValueAtTime(150,t);o4.frequency.exponentialRampToValueAtTime(40,t+.3);
+            g4.gain.setValueAtTime(.5,t);g4.gain.exponentialRampToValueAtTime(.001,t+.4);
+            o4.connect(g4);g4.connect(bcFxGain);o4.start(t);o4.stop(t+.4);
+            break;
+    }
+}
+function mkOsc(t,freqs,dels,vols,dur){
+    for(var i=0;i<freqs.length;i++){
+        var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();
+        o.type='sine';o.frequency.value=freqs[i];
+        g.gain.setValueAtTime(0,t+dels[i]);
+        g.gain.linearRampToValueAtTime(vols[i],t+dels[i]+.02);
+        g.gain.exponentialRampToValueAtTime(.001,t+dels[i]+dur);
+        o.connect(g);g.connect(bcFxGain);o.start(t+dels[i]);o.stop(t+dels[i]+dur+.05);
+    }
+}
+
+/* ================================================
+   16. KAYIT
+================================================ */
+function toggleRec(){
+    if(!S.broadcasting||!bcStreamDest)return;
+    if(!S.recording)startRec();else stopRecInternal();
+}
+function startRec(){
+    bcRecChunks=[];
+    bcRecorder=new MediaRecorder(bcStreamDest.stream,{mimeType:'audio/webm'});
+    bcRecorder.ondataavailable=function(e){if(e.data.size>0)bcRecChunks.push(e.data);};
+    bcRecorder.onstop=function(){$('btnRecDl').classList.remove('hidden');};
+    bcRecorder.start();S.recording=true;
+    $('btnRec').innerHTML='<i class="fas fa-stop mr-1"></i>KAYIT DURDUR';$('btnRec').classList.remove('btn-red');$('btnRec').classList.add('stop');
+    $('recInd').classList.remove('hidden');toast('Kayit basladi');
+}
+function stopRecInternal(){
+    if(bcRecorder&&bcRecorder.state!=='inactive')bcRecorder.stop();
+    S.recording=false;$('btnRec').innerHTML='<i class="fas fa-circle mr-1"></i>KAYIT BASLAT';$('btnRec').classList.add('btn-red');$('btnRec').classList.remove('stop');
+    $('recInd').classList.add('hidden');
+}
+function downloadRec(){
+    if(bcRecChunks.length===0)return;
+    var blob=new Blob(bcRecChunks,{type:'audio/webm'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='radyo-kayit-'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.webm';
+    a.click();URL.revokeObjectURL(a.href);toast('Kayit indirildi');
+}
+
+/* ================================================
+   17. REKLAM ZAMANLAYICI
+================================================ */
+function toggleAd(){
+    if(S.adRunning){clearInterval(S.adInt);S.adRunning=false;S.adSeconds=0;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';return;}
+    S.adSeconds=parseInt($('iAdTime').value)||30;S.adRunning=true;
+    $('btnAd').innerHTML='<i class="fas fa-stop mr-1"></i>DURDUR';
+    $('adCount').textContent=fmtM(S.adSeconds);
+    S.adInt=setInterval(function(){
+        S.adSeconds--;$('adCount').textContent=fmtM(Math.max(0,S.adSeconds));
+        if(S.adSeconds<=0){
+            clearInterval(S.adInt);S.adRunning=false;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';
+            playFx('jingle1');toast('Reklam arasi bitti!');
+        }
+    },1000);
+    playFx('alarm');toast('Reklam arasi basladi');
+}
+
+/* ================================================
+   18. İSTEKLER
+================================================ */
+function renderReqs(queue){
+    var c=$('reqList'),e=$('reqEmpty');
+    if(!queue||queue.length===0){c.innerHTML='';e.classList.remove('hidden');$('reqBadge').classList.add('hidden');return;}
+    e.classList.add('hidden');$('reqBadge').classList.remove('hidden');$('reqBadge').textContent=queue.length;
+    var html='';
+    for(var i=0;i<queue.length;i++){
+        var r=queue[i];
+        html+='<div class="req-item">';
+        html+='<div class="flex-1"><div class="text-sm font-semibold">'+esc(r.nick)+'</div><div class="text-xs" style="color:var(--muted)">'+esc(r.song)+'</div></div>';
+        html+='<button class="btn btn-sm btn-green" style="padding:4px 10px;font-size:10px" data-req-acc="'+r.id+'" data-song="'+esc(r.song)+'"><i class="fas fa-check"></i></button>';
+        html+='<button class="btn btn-sm btn-red" style="padding:4px 10px;font-size:10px" data-req-rej="'+r.id+'"><i class="fas fa-times"></i></button>';
+        html+='<button class="btn btn-sm btn-ghost" style="padding:4px 8px;font-size:10px" data-req-block="'+esc(r.nick)+'" title="At"><i class="fas fa-ban"></i></button>';
+        html+='</div>';
+    }
+    c.innerHTML=html;
+    c.querySelectorAll('[data-req-acc]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'request-action',requestId:parseFloat(b.dataset.reqAcc),accepted:true,song:b.dataset.song});});});
+    c.querySelectorAll('[data-req-rej]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'request-action',requestId:parseFloat(b.dataset.reqRej),accepted:false});});});
+    c.querySelectorAll('[data-req-block]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'block-listener',nick:b.dataset.reqBlock});toast(b.dataset.reqBlock+' atildi');});});
+}
+
+/* ================================================
+   19. PROGRAM
+================================================ */
+function addSchRow(){
+    var tb=$('schBody');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><input class="sch-inp sch-time" type="time" value="12:00" style="width:90px"></td><td><input class="sch-inp sch-name" placeholder="Program adi" style="width:100%"></td><td><button class="btn btn-sm btn-ghost sch-del" style="padding:4px 8px"><i class="fas fa-times"></i></button></td>';
+    tb.appendChild(tr);
+    tr.querySelector('.sch-del').addEventListener('click',function(){tr.remove();});
+}
+function saveSch(){
+    var rows=$('schBody').querySelectorAll('tr'),sch=[];
+    rows.forEach(function(tr){
+        var time=tr.querySelector('.sch-time').value;
+        var name=tr.querySelector('.sch-name').value.trim();
+        if(time&&name)sch.push({time:time,name:name});
+    });
+    S.schedule=sch;
+    wsSend({type:'update-schedule',schedule:sch});
+    toast('Program kaydedildi ve yayinlandi');
+}
+function renderSch(data,isBc){
+    var tb=isBc?$('schBody'):$('schBodyLs');
+    tb.innerHTML='';
+    if(!data||data.length===0){tb.innerHTML='<tr><td colspan="'+(isBc?3:2)+'" class="text-center py-4" style="color:var(--muted)">Program yok</td></tr>';return;}
+    var now=new Date(),nowMin=now.getHours()*60+now.getMinutes();
+    for(var i=0;i<data.length;i++){
+        var p=data[i],parts=p.time.split(':'),min=parseInt(parts[0])*60+parseInt(parts[1]);
+        var isCur=nowMin>=min&&(i===data.length-1||nowMin<parseInt(data[i+1].time.split(':')[0])*60+parseInt(data[i+1].time.split(':')[1]));
+        var tr=document.createElement('tr');
+        if(isCur)tr.className='current-row';
+        tr.innerHTML='<td>'+p.time+'</td><td>'+esc(p.name)+'</td>'+(isBc?'<td></td>':'');
+        tb.appendChild(tr);
+    }
+}
+function renderSchLs(data){renderSch(data,false);}
+
+/* ================================================
+   20. DİNLEYİCİ KURULUM
+================================================ */
+function setupLs(){
+    $('btnLs').addEventListener('click',toggleLs);
+    $('rngVol').addEventListener('input',function(){if(lsGain)lsGain.gain.value=parseInt($('rngVol').value)/100;});
+    $('btnReqSend').addEventListener('click',sendReq);
+    $('iReqSong').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendReq();}});
     resizeCv($('cvLs'));
 }
-
-function toggleLs() {
-    if (S.listening) { stopListening(); return; }
-    if (!S.broadcastActive) return;
-
-    lsAudioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate: S.bcSampleRate});
-    lsAnalyser = lsAudioCtx.createAnalyser();
-    lsAnalyser.fftSize = 128;
-    lsAnalyser.smoothingTimeConstant = 0.8;
-    lsGain = lsAudioCtx.createGain();
-    lsGain.gain.value = parseInt($('rngVol').value) / 100;
-
-    lsPlayProc = lsAudioCtx.createScriptProcessor(2048, 0, 1);
-    lsPlayProc.onaudioprocess = function(e) {
-        var out = e.outputBuffer.getChannelData(0);
-        if (lsAudioQ.length > 0) {
-            var chunk = lsAudioQ.shift();
-            for (var i = 0; i < out.length; i++) {
-                out[i] = i < chunk.length ? chunk[i] : 0;
-            }
-        } else {
-            for (var j = 0; j < out.length; j++) out[j] = 0;
-        }
-    };
-
-    lsPlayProc.connect(lsGain);
-    lsGain.connect(lsAnalyser);
-    lsAnalyser.connect(lsAudioCtx.destination);
-
-    lsFreqData = new Uint8Array(lsAnalyser.frequencyBinCount);
-    lsAudioQ.length = 0;
-
-    S.listening = true;
-    S.lsStart = Date.now();
-    $('btnLs').innerHTML = '<i class="fas fa-pause mr-2"></i>DURAKLAT';
-    $('vinLs').classList.add('spin');
-
-    S.timerInt = setInterval(function() {
-        $('tmLs').textContent = fmtT((Date.now() - S.lsStart) / 1000);
-    }, 1000);
-
-    vizLs();
+function sendReq(){
+    var t=$('iReqSong').value.trim();if(!t||!S.broadcastActive)return;
+    wsSend({type:'request',song:t});$('iReqSong').value='';
 }
-
-function stopListening() {
-    S.listening = false;
-    if (lsPlayProc) { try{lsPlayProc.disconnect();}catch(e){} lsPlayProc = null; }
-    if (lsAudioCtx) { lsAudioCtx.close(); lsAudioCtx = null; }
-    lsAnalyser = null; lsGain = null;
-    if (lsRafId) { cancelAnimationFrame(lsRafId); lsRafId = null; }
-    clearInterval(S.timerInt);
-    lsAudioQ.length = 0;
-
-    $('btnLs').innerHTML = '<i class="fas fa-play mr-2"></i>DINLE';
-    $('vinLs').classList.remove('spin');
-    $('tmLs').textContent = '00:00:00';
-    $('vuFL2').style.height = '0%';
-    $('vuFR2').style.height = '0%';
-    $('vuPL2').style.bottom = '0%';
-    $('vuPR2').style.bottom = '0%';
-    lsPeakL = 0; lsPeakR = 0;
-    clearCv($('cvLs'));
-}
-
-/* ============================
-   VİZÜALİZASYON - YAYINCI
-============================ */
-function vizBc() {
-    if (!S.broadcasting || !bcAnalyser) return;
-    bcRafId = requestAnimationFrame(vizBc);
-    bcAnalyser.getByteFrequencyData(bcFreqData);
-    var len = bcFreqData.length, sL = 0, sR = 0;
-    for (var i = 0; i < len; i++) {
-        var v = bcFreqData[i] / 255;
-        if (i < len / 2) sL += v; else sR += v;
-    }
-    setVU('vuFL','vuPL', Math.min(100, (sL/(len/2))*100*(0.92+Math.random()*.16)), true);
-    setVU('vuFR','vuPR', Math.min(100, (sR/(len/2))*100*(0.92+Math.random()*.16)), false);
-    drawBars($('cvBc'), bcFreqData);
-}
-
-/* ============================
-   VİZÜALİZASYON - DİNLEYİCİ
-============================ */
-function vizLs() {
-    if (!S.listening || !lsAnalyser) return;
-    lsRafId = requestAnimationFrame(vizLs);
-    lsAnalyser.getByteFrequencyData(lsFreqData);
-    var len = lsFreqData.length, sL = 0, sR = 0;
-    for (var i = 0; i < len; i++) {
-        var v = lsFreqData[i] / 255;
-        if (i < len / 2) sL += v; else sR += v;
-    }
-    setVU('vuFL2','vuPL2', Math.min(100, (sL/(len/2))*100), true);
-    setVU('vuFR2','vuPR2', Math.min(100, (sR/(len/2))*100), false);
-    drawBars($('cvLs'), lsFreqData);
-}
-
-/* ============================
-   VU METRE
-============================ */
-function setVU(fId, pId, v, isL) {
-    var f = $(fId), p = $(pId);
-    if (!f || !p) return;
-    var vv = Math.max(0, Math.min(100, v));
-    f.style.height = vv + '%';
-    var pk = isL ? lsPeakL : lsPeakR;
-    if (vv > pk) pk = vv; else pk = Math.max(0, pk - 0.6);
-    if (isL) lsPeakL = pk; else lsPeakR = pk;
-    p.style.bottom = pk + '%';
-}
-
-/* ============================
-   DALGA FORMU
-============================ */
-function drawBars(cv, data) {
-    if (!cv) return;
-    var ctx = cv.getContext('2d');
-    var dpr = window.devicePixelRatio || 1;
-    var W = cv.width / dpr, H = cv.height / dpr;
-    ctx.clearRect(0, 0, W, H);
-    var cnt = data.length, gap = 2, bw = Math.max(1, (W - gap * (cnt - 1)) / cnt);
-    for (var i = 0; i < cnt; i++) {
-        var val = data[i] / 255, bh = Math.max(1, val * H * 0.85);
-        var x = i * (bw + gap), y = H - bh;
-        var g = ctx.createLinearGradient(x, H, x, y);
-        g.addColorStop(0, '#ff2d55');
-        g.addColorStop(0.6, '#ff6b35');
-        g.addColorStop(1, '#ff9500');
-        ctx.fillStyle = g;
-        var r = Math.min(bw / 2, 3);
-        ctx.beginPath();
-        ctx.moveTo(x, H);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.lineTo(x + bw - r, y);
-        ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
-        ctx.lineTo(x + bw, H);
-        ctx.closePath();
-        ctx.fill();
-        var rg = ctx.createLinearGradient(x, H, x, H + bh * 0.25);
-        rg.addColorStop(0, 'rgba(255,45,85,0.18)');
-        rg.addColorStop(1, 'rgba(255,45,85,0)');
-        ctx.fillStyle = rg;
-        ctx.fillRect(x, H, bw, bh * 0.25);
-    }
-}
-
-function clearCv(cv) {
-    if (!cv) return;
-    cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
-}
-
-function resizeCv(cv) {
-    if (!cv || !cv.parentElement) return;
-    var r = cv.parentElement.getBoundingClientRect();
-    var d = window.devicePixelRatio || 1;
-    cv.width = r.width * d;
-    cv.height = r.height * d;
-    cv.getContext('2d').scale(d, d);
-}
-
-/* ============================
-   SOHBET
-============================ */
-function sendChat() {
-    var inp = $('iChat'), t = inp.value.trim();
-    if (!t) return;
-    var m = {type:'chat', nick:S.nick, text:t, time:Date.now()};
-    wsSend(m);
-    addChat(m);
-    inp.value = '';
-    inp.focus();
-}
-
-function addChat(m) {
-    var c = $('chatMsgs'), r = document.createElement('div');
-    r.className = 'mr';
-    var col = nCol(m.nick);
-    var t = new Date(m.time).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
-    var me = m.nick === S.nick;
-    r.innerHTML = '<span class="mn" style="color:' + col + '">' + esc(m.nick) + (me ? ' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>' : '') + '</span><span class="mt">' + esc(m.text) + '</span><span class="mtime">' + t + '</span>';
-    c.appendChild(r);
-    c.scrollTop = c.scrollHeight;
-}
-
-function addSys(t) {
-    var c = $('chatMsgs'), r = document.createElement('div');
-    r.className = 'msys';
-    r.textContent = t;
-    c.appendChild(r);
-    c.scrollTop = c.scrollHeight;
-}
-
-/* ============================
-   MOBİL SOHBET
-============================ */
-function initChatMob() {
-    $('btnChatTog').addEventListener('click', function() {
-        $('chatP').classList.add('open');
-        $('cov').classList.add('open');
-    });
-    $('btnChatX').addEventListener('click', closeCM);
-    $('cov').addEventListener('click', closeCM);
-}
-
-function closeCM() {
-    $('chatP').classList.remove('open');
-    $('cov').classList.remove('open');
-}
-
-/* ============================
-   PENCERE OLAYLARI
-============================ */
-window.addEventListener('beforeunload', function() {
-    if (S.broadcasting) wsSend({type:'broadcast-stop'});
-    if (ws) ws.close();
-});
-
-window.addEventListener('resize', function() {
-    if (S.mode === 'broadcaster' && !S.broadcasting) resizeCv($('cvBc'));
-    if (S.mode === 'listener') resizeCv($('cvLs'));
-});
-
-/* ============================
-   BAŞLAT
-============================ */
-document.addEventListener('DOMContentLoaded', function() {
-    wsConnect();
-    initLogin();
-    initChatMob();
-    $('btnChatS').addEventListener('click', sendChat);
-    $('iChat').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
-    });
-});
-</script>
-</body>
-</html>
+function toggleLs(){
+    if(S.listening){stopListening();return;}
+    if(!S.broadcastActive)return;
+    lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});
+    lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;
+    ls
