@@ -272,7 +272,7 @@ switch(m.type){
 case'joined':if(m.role==='broadcaster'){$('fStatus').textContent='Yayinci olarak baglandiniz';}else{$('fStatus').textContent='Dinleyici olarak baglandiniz';if(m.active){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');}updCount(m.count||0);if(m.schedule)renderSch(m.schedule,false);}break;
 case'broadcast-start':if(S.mode==='listener'){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');addSys(m.nick+' yayini baslatti');if(m.schedule)renderSch(m.schedule,false);}break;
 case'broadcast-stop':if(S.mode==='listener'){showBcStopped();addSys('Yayin sona erdi');}break;
-case'song-update':if(S.mode==='listener')$('npText').textContent=m.song||'';break;
+case'song-update':if(S.mode==='listener')$('npText').textContent=m.song||'Yayin bekleniyor...';break;
 case'chat':if(m.nick!==S.nick)addChat(m);break;
 case'listener-update':updCount(m.count||0);if(m.stats){S.peak=m.stats.peak||0;S.totalJoined=m.stats.totalJoined||0;updStats();}break;
 case'system':addSys(m.text);break;
@@ -329,7 +329,7 @@ bcGain=bcAudioCtx.createGain();bcGain.gain.value=0;
 bcSrc=bcAudioCtx.createMediaStreamSource(bcMic);bcSrc.connect(bcGain);
 bcMixGain=bcAudioCtx.createGain();bcMixGain.gain.value=1;bcGain.connect(bcMixGain);bcMixGain.connect(bcAnalyser);
 bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;bcDjGain.connect(bcMixGain);
-djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);djAudio.addEventListener('ended',function(){if(djPlaying)playPl(djCurIdx+1);});
+djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
 bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
 bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1)ws.send(e.inputBuffer.getChannelData(0).buffer);};bcMixGain.connect(bcSendProc);
 bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
@@ -364,8 +364,8 @@ function toggleMic(){if(!S.broadcasting)return;S.micOn=!S.micOn;if(S.micOn){bcGa
 /* === AUTO DJ === */
 function addFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('audio/'))continue;var url=URL.createObjectURL(files[i]);var name=files[i].name.replace(/\.[^.]+$/,'');djPlaylist.push({name:name,url:url,duration:0});(function(idx){var a=new Audio();a.src=djPlaylist[idx].url;a.addEventListener('loadedmetadata',function(){djPlaylist[idx].duration=a.duration;renderPl();});})(djPlaylist.length-1);}renderPl();toast(djPlaylist.length+' parca eklendi');}
 function renderPl(){var c=$('plList'),e=$('plEmpty');if(!djPlaylist.length){c.innerHTML='';e.classList.remove('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=true;return;}e.classList.add('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=!S.broadcasting;var h='';for(var i=0;i<djPlaylist.length;i++){var p=djPlaylist[i],a=i===djCurIdx;h+='<div class="pl-item'+(a?' playing':'')+'" data-idx="'+i+'"><span class="pl-idx">'+(a?'<i class="fas fa-volume-up" style="color:var(--accent);font-size:10px"></i>':(i+1))+'</span><span class="pl-name">'+esc(p.name)+'</span><span class="pl-dur">'+(p.duration>0?fmtM(p.duration):'--:--')+'</span><span class="pl-del" data-del="'+i+'"><i class="fas fa-times"></i></span></div>';}c.innerHTML=h;c.querySelectorAll('.pl-item').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('.pl-del'))return;playPl(parseInt(el.dataset.idx));});});c.querySelectorAll('.pl-del').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var idx=parseInt(el.dataset.del);if(idx===djCurIdx){djAudio.pause();djPlaying=false;djCurIdx=-1;}else if(idx<djCurIdx)djCurIdx--;URL.revokeObjectURL(djPlaylist[idx].url);djPlaylist.splice(idx,1);renderPl();});});$('djNow').textContent=djCurIdx>=0&&djCurIdx<djPlaylist.length?'Calan: '+djPlaylist[djCurIdx].name:'';}
-function playPl(idx){if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length)return;djCurIdx=idx;djAudio.src=djPlaylist[idx].url;djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';renderPl();}
-function toggleDj(){if(!S.broadcasting)return;if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';}else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';}else if(djPlaylist.length)playPl(0);}
+function playPl(idx){if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length)return;djCurIdx=idx;djAudio.src=djPlaylist[idx].url;djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';renderPl();S.song=djPlaylist[idx].name;$('iSong').value=S.song;wsSend({type:'song-update',song:S.song});}
+function toggleDj(){if(!S.broadcasting)return;if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';wsSend({type:'song-update',song:''});}else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';S.song=djPlaylist[djCurIdx].name;wsSend({type:'song-update',song:S.song});}else if(djPlaylist.length)playPl(0);}
 
 /* === EFEKTLER === */
 function playFx(type){if(!bcAudioCtx||!bcFxGain)return;var t=bcAudioCtx.currentTime;
