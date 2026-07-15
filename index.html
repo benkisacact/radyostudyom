@@ -305,9 +305,9 @@ function initLogin() {
         $('hdrName').textContent = S.station;
         const r = $('hdrRole'); r.classList.remove('hidden');
         r.textContent = S.mode==='broadcaster' ? 'YAYINCI' : 'DINLEYICI';
-        if (S.mode==='broadcaster') { $('vBc').classList.remove('hidden'); setupBc(); }
+                if (S.mode==='broadcaster') { $('vBc').classList.remove('hidden'); setupBc(); }
         else { $('vLs').classList.remove('hidden'); setupLs(); }
-        // Sunucuya baglandiktan sonra join gonderilir (onopen'da)
+        if (ws && ws.readyState === 1) doJoin();
     });
 }
 
