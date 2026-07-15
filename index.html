@@ -100,7 +100,6 @@
     <div class="float-orb" style="width:6px;height:6px;background:var(--accent);opacity:.2;top:18%;left:12%" aria-hidden="true"></div>
     <div class="float-orb" style="width:4px;height:4px;background:var(--warm);opacity:.15;top:72%;left:22%;animation-delay:-3s" aria-hidden="true"></div>
     <div class="float-orb" style="width:5px;height:5px;background:var(--accent);opacity:.18;top:30%;left:75%;animation-delay:-6s" aria-hidden="true"></div>
-
     <div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
         <h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
         <p class="text-center text-sm mb-7" style="color:var(--muted)">Coklu cihaz canli yayin</p>
@@ -134,10 +133,8 @@
             <button id="btnChatTog" class="cbtn items-center justify-center w-9 h-9 rounded-lg border text-sm" style="border-color:var(--border);color:var(--muted);background:var(--card)" aria-label="Sohbet"><i class="fas fa-comments"></i></button>
         </div>
     </header>
-
     <div class="flex flex-1 overflow-hidden">
         <main class="flex-1 flex flex-col overflow-y-auto p-4 md:p-6">
-
             <!-- YAYINCI -->
             <div id="vBc" class="hidden flex-1 flex flex-col items-center gap-5">
                 <div class="flex items-center gap-6 md:gap-10 mt-2">
@@ -155,7 +152,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- DİNLEYİCİ -->
             <div id="vLs" class="hidden flex-1 flex flex-col items-center gap-5">
                 <div class="flex items-center gap-6 md:gap-10 mt-2">
@@ -175,7 +171,6 @@
                 </div>
             </div>
         </main>
-
         <!-- SOHBET -->
         <aside id="chatP" class="chat-p">
             <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)">
@@ -186,7 +181,6 @@
             <div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesajinizi yazin..." maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
         </aside>
     </div>
-
     <footer class="flex items-center justify-between px-5 py-2 border-t text-xs" style="border-color:var(--border);background:var(--surface);color:var(--muted);min-height:38px">
         <span id="fStatus">Hazir</span>
         <span id="fConn">Baglaniyor...</span>
@@ -194,65 +188,63 @@
 </div>
 
 <script>
-/* ============================================
+/* ============================
    DURUM
-============================================ */
-const S = {
+============================ */
+var S = {
     mode: null, station: '', nick: '',
     broadcasting: false, listening: false,
     song: '', listenerCount: 0,
     bcStart: null, lsStart: null, timerInt: null,
-    bcSampleRate: 44100
+    broadcastActive: false, bcSampleRate: 44100
 };
 
-/* ============================================
+/* ============================
    SES - YAYINCI
-============================================ */
-let bcAudioCtx = null, bcAnalyser = null, bcGain = null, bcSrc = null, bcMic = null, bcSendProc = null;
-let bcFreqData = null, bcRafId = null, bcPeakL = 0, bcPeakR = 0;
+============================ */
+var bcAudioCtx = null, bcAnalyser = null, bcGain = null;
+var bcSrc = null, bcMic = null, bcSendProc = null, bcSilent = null;
+var bcFreqData = null, bcRafId = null, bcPeakL = 0, bcPeakR = 0;
 
-/* ============================================
+/* ============================
    SES - DINLEYICI
-============================================ */
-let lsAudioCtx = null, lsAnalyser = null, lsGain = null, lsPlayProc = null;
-let lsFreqData = null, lsRafId = null, lsPeakL = 0, lsPeakR = 0;
-const lsAudioQ = [];
-const LS_MAX_Q = 60;
+============================ */
+var lsAudioCtx = null, lsAnalyser = null, lsGain = null, lsPlayProc = null;
+var lsFreqData = null, lsRafId = null, lsPeakL = 0, lsPeakR = 0;
+var lsAudioQ = [];
+var LS_MAX_Q = 60;
 
-/* ============================================
+/* ============================
    WEBSOCKET
-============================================ */
-let ws = null;
-let wsReconn = null;
+============================ */
+var ws = null;
+var wsReconn = null;
 
 function wsConnect() {
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(proto + '//' + location.host);
-
     ws.binaryType = 'arraybuffer';
     setConn('wait');
 
-    ws.onopen = () => {
+    ws.onopen = function() {
         setConn('ok');
         $('fConn').textContent = 'Baglandi';
-        // Giris yaptiktan sonra join gonderilecek
         if (S.mode) doJoin();
     };
 
-    ws.onclose = () => {
+    ws.onclose = function() {
         setConn('no');
         $('fConn').textContent = 'Baglanti koptu, yeniden baglaniyor...';
         clearTimeout(wsReconn);
         wsReconn = setTimeout(wsConnect, 3000);
     };
 
-    ws.onerror = () => {};
+    ws.onerror = function() {};
 
-    ws.onmessage = (e) => {
+    ws.onmessage = function(e) {
         if (typeof e.data === 'string') {
             try { handleMsg(JSON.parse(e.data)); } catch(err) {}
         } else {
-            // Binary = ses verisi (dinleyici)
             if (S.listening && lsAudioCtx) {
                 if (lsAudioQ.length < LS_MAX_Q) {
                     lsAudioQ.push(new Float32Array(e.data));
@@ -266,90 +258,117 @@ function wsSend(obj) {
     if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
 }
 
-function setConn(state) {
-    const d = $('connDot');
-    d.className = 'conn-dot ' + state;
+function doJoin() {
+    wsSend({
+        type: 'join',
+        station: S.station,
+        nick: S.nick,
+        role: S.mode,
+        sampleRate: S.mode === 'broadcaster' ? 44100 : 0
+    });
 }
 
-/* ============================================
-   YARDIMCILAR
-============================================ */
-const $ = id => document.getElementById(id);
-const nColors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
-function nCol(n) { let h=0; for(let i=0;i<n.length;i++) h=n.charCodeAt(i)+((h<<5)-h); return nColors[Math.abs(h)%nColors.length]; }
-function fmtT(s) { return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0'); }
-let _tt;
-function toast(m) { const e=$('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>e.classList.remove('show'),2800); }
-function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function setConn(state) {
+    $('connDot').className = 'conn-dot ' + state;
+}
 
-/* ============================================
+/* ============================
+   YARDIMCILAR
+============================ */
+var $ = function(id) { return document.getElementById(id); };
+var nColors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
+function nCol(n) { var h=0; for(var i=0;i<n.length;i++) h=n.charCodeAt(i)+((h<<5)-h); return nColors[Math.abs(h)%nColors.length]; }
+function fmtT(s) { return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+var _tt;
+function toast(m) { var e=$('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(function(){e.classList.remove('show');},2800); }
+function esc(s) { var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+/* ============================
    GİRİŞ EKRANI
-============================================ */
+============================ */
 function initLogin() {
-    const cards = document.querySelectorAll('.mode-card');
-    const btn = $('btnGo');
-    const check = () => { btn.disabled = !($('iStation').value.trim() && $('iNick').value.trim() && S.mode); };
-    cards.forEach(c => {
-        const go = () => { cards.forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); S.mode=c.dataset.m; check(); };
+    var cards = document.querySelectorAll('.mode-card');
+    var btn = $('btnGo');
+    var check = function() {
+        btn.disabled = !($('iStation').value.trim() && $('iNick').value.trim() && S.mode);
+    };
+    cards.forEach(function(c) {
+        var go = function() {
+            cards.forEach(function(x){x.classList.remove('sel');});
+            c.classList.add('sel');
+            S.mode = c.dataset.m;
+            check();
+        };
         c.addEventListener('click', go);
-        c.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
+        c.addEventListener('keydown', function(e) { if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
     });
     $('iStation').addEventListener('input', check);
     $('iNick').addEventListener('input', check);
-    btn.addEventListener('click', () => {
-        if(btn.disabled) return;
+
+    btn.addEventListener('click', function() {
+        if (btn.disabled) return;
         S.station = $('iStation').value.trim();
         S.nick = $('iNick').value.trim();
+
         $('login').classList.add('hidden');
         $('app').classList.remove('hidden');
         $('hdrName').textContent = S.station;
-        const r = $('hdrRole'); r.classList.remove('hidden');
-        r.textContent = S.mode==='broadcaster' ? 'YAYINCI' : 'DINLEYICI';
-                if (S.mode==='broadcaster') { $('vBc').classList.remove('hidden'); setupBc(); }
-        else { $('vLs').classList.remove('hidden'); setupLs(); }
-        if (ws && ws.readyState === 1) doJoin();
+        var r = $('hdrRole');
+        r.classList.remove('hidden');
+        r.textContent = S.mode === 'broadcaster' ? 'YAYINCI' : 'DINLEYICI';
+
+        if (S.mode === 'broadcaster') {
+            $('vBc').classList.remove('hidden');
+            setupBc();
+        } else {
+            $('vLs').classList.remove('hidden');
+            setupLs();
+        }
+
+        $('fStatus').textContent = S.nick + ' olarak giris yaptiniz';
+
+        /* Sunucuya katilim mesajini gonder */
+        if (ws && ws.readyState === 1) {
+            doJoin();
+        }
     });
 }
 
-function doJoin() {
-    wsSend({ type:'join', station:S.station, nick:S.nick, role:S.mode, sampleRate: S.mode==='broadcaster' ? 44100 : 0 });
-}
-
-/* ============================================
+/* ============================
    MESAJ İŞLEYİCİ
-============================================ */
+============================ */
 function handleMsg(m) {
     switch(m.type) {
         case 'joined':
-            if (m.role==='broadcaster') {
+            if (m.role === 'broadcaster') {
                 $('fStatus').textContent = S.nick + ' olarak baglandiniz';
             } else {
                 $('fStatus').textContent = S.nick + ' olarak baglandiniz';
                 if (m.active) {
                     S.bcSampleRate = m.sampleRate || 44100;
-                    showBroadcastActive(m.song || '');
+                    showBcActive(m.song || '');
                 }
                 updCount(m.count || 0);
             }
             break;
 
         case 'broadcast-start':
-            if (S.mode==='listener') {
+            if (S.mode === 'listener') {
                 S.bcSampleRate = m.sampleRate || 44100;
-                showBroadcastActive(m.song || '');
+                showBcActive(m.song || '');
                 addSys(m.nick + ' yayini baslatti');
             }
             break;
 
         case 'broadcast-stop':
-            if (S.mode==='listener') {
-                showBroadcastStopped();
+            if (S.mode === 'listener') {
+                showBcStopped();
                 addSys('Yayin sona erdi');
             }
             break;
 
         case 'song-update':
-            if (S.mode==='listener') $('npText').textContent = m.song || '';
+            if (S.mode === 'listener') $('npText').textContent = m.song || '';
             break;
 
         case 'chat':
@@ -362,7 +381,7 @@ function handleMsg(m) {
     }
 }
 
-function showBroadcastActive(song) {
+function showBcActive(song) {
     S.broadcastActive = true;
     $('btnLs').disabled = false;
     $('oaDot').classList.add('active');
@@ -372,7 +391,7 @@ function showBroadcastActive(song) {
     if (song) $('npText').textContent = song;
 }
 
-function showBroadcastStopped() {
+function showBcStopped() {
     S.broadcastActive = false;
     stopListening();
     $('btnLs').disabled = true;
@@ -391,40 +410,84 @@ function updCount(n) {
     $('chatOn').textContent = n;
 }
 
-/* ============================================
+/* ============================
    YAYINCI KURULUM
-============================================ */
-async function toggleBc() {
-    if (S.broadcasting) { stopBc(); return; }
-    try {
-        const devId = $('selMic').value;
-        const cons = (devId && devId!=='') ? {audio:{deviceId:{exact:devId}}} : {audio:true};
-        bcMic = await navigator.mediaDevices.getUserMedia(cons);
+============================ */
+function setupBc() {
+    var sel = $('selMic');
 
-        bcAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    navigator.mediaDevices.getUserMedia({audio: true}).then(function(tmp) {
+        tmp.getTracks().forEach(function(t){t.stop();});
+        return navigator.mediaDevices.enumerateDevices();
+    }).then(function(devs) {
+        sel.innerHTML = '';
+        var found = false;
+        devs.filter(function(d){return d.kind==='audioinput';}).forEach(function(d, i) {
+            var o = document.createElement('option');
+            o.value = d.deviceId;
+            o.textContent = d.label || ('Mikrofon ' + (i + 1));
+            sel.appendChild(o);
+            found = true;
+        });
+        if (!found) sel.innerHTML = '<option>Mikrofon bulunamadi</option>';
+    }).catch(function(err) {
+        sel.innerHTML = '<option value="">Mikrofon erisimi gerekli</option>';
+        toast('Mikrofon izni verin ve sayfayi yenileyin');
+        console.error('Mic error:', err);
+    });
+
+    $('btnBc').addEventListener('click', toggleBc);
+    $('rngGain').addEventListener('input', function(e) {
+        var v = parseInt(e.target.value);
+        $('lblGain').textContent = v + '%';
+        if (bcGain) bcGain.gain.value = v / 100;
+    });
+    $('iSong').addEventListener('input', function(e) {
+        S.song = e.target.value.trim();
+        wsSend({type: 'song-update', song: S.song});
+    });
+    resizeCv($('cvBc'));
+}
+
+/* ============================
+   YAYINCI BAŞLAT / DURDUR
+============================ */
+function toggleBc() {
+    if (S.broadcasting) { stopBc(); return; }
+
+    var devId = $('selMic').value;
+    var cons = (devId && devId !== '') ? {audio:{deviceId:{exact:devId}}} : {audio:true};
+
+    navigator.mediaDevices.getUserMedia(cons).then(function(stream) {
+        bcMic = stream;
+
+        bcAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
         bcAnalyser = bcAudioCtx.createAnalyser();
         bcAnalyser.fftSize = 128;
         bcAnalyser.smoothingTimeConstant = 0.8;
         bcGain = bcAudioCtx.createGain();
-        bcGain.gain.value = parseInt($('rngGain').value)/100;
+        bcGain.gain.value = parseInt($('rngGain').value) / 100;
 
         bcSrc = bcAudioCtx.createMediaStreamSource(bcMic);
+
+        /* Zincir: mic -> gain -> analyser (VU metre icin) */
         bcSrc.connect(bcGain);
         bcGain.connect(bcAnalyser);
 
-        /* --- DÜZELTME: Sessiz cikis baglantisi --- */
+        /* Zincir: gain -> sendProc -> silentGain -> destination
+           (sendProc'un calismasi icin destination'a bagli olmali) */
         bcSendProc = bcAudioCtx.createScriptProcessor(2048, 1, 1);
-        bcSendProc.onaudioprocess = (e) => {
-            if (ws && ws.readyState===1) {
+        bcSendProc.onaudioprocess = function(e) {
+            if (ws && ws.readyState === 1) {
                 ws.send(e.inputBuffer.getChannelData(0).buffer);
             }
         };
         bcGain.connect(bcSendProc);
-        const bcSilent = bcAudioCtx.createGain();
+
+        bcSilent = bcAudioCtx.createGain();
         bcSilent.gain.value = 0;
         bcSendProc.connect(bcSilent);
         bcSilent.connect(bcAudioCtx.destination);
-        /* --- DÜZELTME SONU --- */
 
         bcFreqData = new Uint8Array(bcAnalyser.frequencyBinCount);
 
@@ -441,35 +504,45 @@ async function toggleBc() {
         $('vinBc').classList.add('spin');
         $('fStatus').textContent = 'Yayin aktif';
 
-        S.timerInt = setInterval(() => { $('tmBc').textContent = fmtT((Date.now()-S.bcStart)/1000); }, 1000);
+        S.timerInt = setInterval(function() {
+            $('tmBc').textContent = fmtT((Date.now() - S.bcStart) / 1000);
+        }, 1000);
 
         wsSend({type:'broadcast-start', song:S.song, sampleRate:bcAudioCtx.sampleRate});
         addSys('Yayin basladi!');
         vizBc();
         toast('Yayin baslatildi');
-    } catch(e) {
-        if(e.name==='NotAllowedError') toast('Mikrofon izni verilmedi!');
-        else if(e.name==='NotFoundError') toast('Mikrofon bulunamadi!');
-        else toast('Hata: '+e.message);
-    }
+
+    }).catch(function(err) {
+        if (err.name === 'NotAllowedError') toast('Mikrofon izni verilmedi!');
+        else if (err.name === 'NotFoundError') toast('Mikrofon bulunamadi!');
+        else toast('Hata: ' + err.message);
+    });
 }
 
 function stopBc() {
     S.broadcasting = false;
     clearInterval(S.timerInt);
-    if(bcMic){bcMic.getTracks().forEach(t=>t.stop());bcMic=null;}
-    if(bcSendProc){try{bcSendProc.disconnect();}catch(e){}bcSendProc=null;}
-    if(bcAudioCtx){bcAudioCtx.close();bcAudioCtx=null;}
-    if(bcRafId){cancelAnimationFrame(bcRafId);bcRafId=null;}
 
-    $('btnBc').textContent='YAYINI BASLAT'; $('btnBc').classList.remove('stop');
+    if (bcMic) { bcMic.getTracks().forEach(function(t){t.stop();}); bcMic = null; }
+    if (bcSendProc) { try{bcSendProc.disconnect();}catch(e){} bcSendProc = null; }
+    if (bcSilent) { try{bcSilent.disconnect();}catch(e){} bcSilent = null; }
+    if (bcAudioCtx) { bcAudioCtx.close(); bcAudioCtx = null; }
+    if (bcRafId) { cancelAnimationFrame(bcRafId); bcRafId = null; }
+
+    $('btnBc').textContent = 'YAYINI BASLAT';
+    $('btnBc').classList.remove('stop');
     $('oaDot').classList.remove('active');
-    $('oaText').textContent='YAYIN DURDURULDU'; $('oaText').style.color='var(--muted)';
-    $('hdr').classList.remove('hdr-live'); $('vinBc').classList.remove('spin');
-    $('fStatus').textContent='Yayin durduruldu';
-    $('vuFL').style.height='0%'; $('vuFR').style.height='0%';
-    $('vuPL').style.bottom='0%'; $('vuPR').style.bottom='0%';
-    bcPeakL=0; bcPeakR=0;
+    $('oaText').textContent = 'YAYIN DURDURULDU';
+    $('oaText').style.color = 'var(--muted)';
+    $('hdr').classList.remove('hdr-live');
+    $('vinBc').classList.remove('spin');
+    $('fStatus').textContent = 'Yayin durduruldu';
+    $('vuFL').style.height = '0%';
+    $('vuFR').style.height = '0%';
+    $('vuPL').style.bottom = '0%';
+    $('vuPR').style.bottom = '0%';
+    bcPeakL = 0; bcPeakR = 0;
     clearCv($('cvBc'));
 
     wsSend({type:'broadcast-stop'});
@@ -477,36 +550,38 @@ function stopBc() {
     toast('Yayin durduruldu');
 }
 
-/* ============================================
+/* ============================
    DİNLEYİCİ KURULUM
-============================================ */
+============================ */
 function setupLs() {
     $('btnLs').addEventListener('click', toggleLs);
-    $('rngVol').addEventListener('input', () => {
-        if(lsGain) lsGain.gain.value = parseInt($('rngVol').value)/100;
+    $('rngVol').addEventListener('input', function() {
+        if (lsGain) lsGain.gain.value = parseInt($('rngVol').value) / 100;
     });
     resizeCv($('cvLs'));
 }
 
 function toggleLs() {
-    if(S.listening){ stopListening(); return; }
-    if(!S.broadcastActive) return;
+    if (S.listening) { stopListening(); return; }
+    if (!S.broadcastActive) return;
 
-    lsAudioCtx = new (window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});
+    lsAudioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate: S.bcSampleRate});
     lsAnalyser = lsAudioCtx.createAnalyser();
     lsAnalyser.fftSize = 128;
     lsAnalyser.smoothingTimeConstant = 0.8;
     lsGain = lsAudioCtx.createGain();
-    lsGain.gain.value = parseInt($('rngVol').value)/100;
+    lsGain.gain.value = parseInt($('rngVol').value) / 100;
 
     lsPlayProc = lsAudioCtx.createScriptProcessor(2048, 0, 1);
-    lsPlayProc.onaudioprocess = (e) => {
-        const out = e.outputBuffer.getChannelData(0);
-        if(lsAudioQ.length > 0) {
-            const chunk = lsAudioQ.shift();
-            for(let i=0;i<out.length;i++) out[i] = i<chunk.length ? chunk[i] : 0;
+    lsPlayProc.onaudioprocess = function(e) {
+        var out = e.outputBuffer.getChannelData(0);
+        if (lsAudioQ.length > 0) {
+            var chunk = lsAudioQ.shift();
+            for (var i = 0; i < out.length; i++) {
+                out[i] = i < chunk.length ? chunk[i] : 0;
+            }
         } else {
-            out.fill(0);
+            for (var j = 0; j < out.length; j++) out[j] = 0;
         }
     };
 
@@ -521,149 +596,205 @@ function toggleLs() {
     S.lsStart = Date.now();
     $('btnLs').innerHTML = '<i class="fas fa-pause mr-2"></i>DURAKLAT';
     $('vinLs').classList.add('spin');
-    S.timerInt = setInterval(() => { $('tmLs').textContent = fmtT((Date.now()-S.lsStart)/1000); }, 1000);
+
+    S.timerInt = setInterval(function() {
+        $('tmLs').textContent = fmtT((Date.now() - S.lsStart) / 1000);
+    }, 1000);
+
     vizLs();
 }
 
 function stopListening() {
     S.listening = false;
-    if(lsPlayProc){try{lsPlayProc.disconnect();}catch(e){}lsPlayProc=null;}
-    if(lsAudioCtx){lsAudioCtx.close();lsAudioCtx=null;}
-    lsAnalyser=null; lsGain=null;
-    if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}
+    if (lsPlayProc) { try{lsPlayProc.disconnect();}catch(e){} lsPlayProc = null; }
+    if (lsAudioCtx) { lsAudioCtx.close(); lsAudioCtx = null; }
+    lsAnalyser = null; lsGain = null;
+    if (lsRafId) { cancelAnimationFrame(lsRafId); lsRafId = null; }
     clearInterval(S.timerInt);
     lsAudioQ.length = 0;
 
     $('btnLs').innerHTML = '<i class="fas fa-play mr-2"></i>DINLE';
     $('vinLs').classList.remove('spin');
     $('tmLs').textContent = '00:00:00';
-    $('vuFL2').style.height='0%'; $('vuFR2').style.height='0%';
-    $('vuPL2').style.bottom='0%'; $('vuPR2').style.bottom='0%';
-    lsPeakL=0; lsPeakR=0;
+    $('vuFL2').style.height = '0%';
+    $('vuFR2').style.height = '0%';
+    $('vuPL2').style.bottom = '0%';
+    $('vuPR2').style.bottom = '0%';
+    lsPeakL = 0; lsPeakR = 0;
     clearCv($('cvLs'));
 }
 
-/* ============================================
+/* ============================
    VİZÜALİZASYON - YAYINCI
-============================================ */
+============================ */
 function vizBc() {
-    if(!S.broadcasting||!bcAnalyser) return;
+    if (!S.broadcasting || !bcAnalyser) return;
     bcRafId = requestAnimationFrame(vizBc);
     bcAnalyser.getByteFrequencyData(bcFreqData);
-    const len=bcFreqData.length; let sL=0,sR=0;
-    for(let i=0;i<len;i++){const v=bcFreqData[i]/255; if(i<len/2)sL+=v;else sR+=v;}
-    setVU('vuFL','vuPL',Math.min(100,(sL/(len/2))*100*(0.92+Math.random()*.16)),true);
-    setVU('vuFR','vuPR',Math.min(100,(sR/(len/2))*100*(0.92+Math.random()*.16)),false);
-    drawBars($('cvBc'),bcFreqData);
+    var len = bcFreqData.length, sL = 0, sR = 0;
+    for (var i = 0; i < len; i++) {
+        var v = bcFreqData[i] / 255;
+        if (i < len / 2) sL += v; else sR += v;
+    }
+    setVU('vuFL','vuPL', Math.min(100, (sL/(len/2))*100*(0.92+Math.random()*.16)), true);
+    setVU('vuFR','vuPR', Math.min(100, (sR/(len/2))*100*(0.92+Math.random()*.16)), false);
+    drawBars($('cvBc'), bcFreqData);
 }
 
-/* ============================================
+/* ============================
    VİZÜALİZASYON - DİNLEYİCİ
-============================================ */
+============================ */
 function vizLs() {
-    if(!S.listening||!lsAnalyser) return;
+    if (!S.listening || !lsAnalyser) return;
     lsRafId = requestAnimationFrame(vizLs);
     lsAnalyser.getByteFrequencyData(lsFreqData);
-    const len=lsFreqData.length; let sL=0,sR=0;
-    for(let i=0;i<len;i++){const v=lsFreqData[i]/255; if(i<len/2)sL+=v;else sR+=v;}
-    setVU('vuFL2','vuPL2',Math.min(100,(sL/(len/2))*100),true);
-    setVU('vuFR2','vuPR2',Math.min(100,(sR/(len/2))*100),false);
-    drawBars($('cvLs'),lsFreqData);
+    var len = lsFreqData.length, sL = 0, sR = 0;
+    for (var i = 0; i < len; i++) {
+        var v = lsFreqData[i] / 255;
+        if (i < len / 2) sL += v; else sR += v;
+    }
+    setVU('vuFL2','vuPL2', Math.min(100, (sL/(len/2))*100), true);
+    setVU('vuFR2','vuPR2', Math.min(100, (sR/(len/2))*100), false);
+    drawBars($('cvLs'), lsFreqData);
 }
 
-/* ============================================
+/* ============================
    VU METRE
-============================================ */
-function setVU(fId,pId,v,isL) {
-    const f=$(fId),p=$(pId); if(!f||!p)return;
-    const vv=Math.max(0,Math.min(100,v));
-    f.style.height=vv+'%';
-    let pk=isL?lsPeakL:lsPeakR;
-    if(vv>pk)pk=vv; else pk=Math.max(0,pk-.6);
-    if(isL)lsPeakL=pk; else lsPeakR=pk;
-    p.style.bottom=pk+'%';
+============================ */
+function setVU(fId, pId, v, isL) {
+    var f = $(fId), p = $(pId);
+    if (!f || !p) return;
+    var vv = Math.max(0, Math.min(100, v));
+    f.style.height = vv + '%';
+    var pk = isL ? lsPeakL : lsPeakR;
+    if (vv > pk) pk = vv; else pk = Math.max(0, pk - 0.6);
+    if (isL) lsPeakL = pk; else lsPeakR = pk;
+    p.style.bottom = pk + '%';
 }
 
-/* ============================================
+/* ============================
    DALGA FORMU
-============================================ */
-function drawBars(cv,data) {
-    if(!cv)return;
-    const ctx=cv.getContext('2d');
-    const dpr=window.devicePixelRatio||1;
-    const W=cv.width/dpr, H=cv.height/dpr;
-    ctx.clearRect(0,0,W,H);
-    const cnt=data.length, gap=2, bw=Math.max(1,(W-gap*(cnt-1))/cnt);
-    for(let i=0;i<cnt;i++){
-        const val=data[i]/255, bh=Math.max(1,val*H*.85);
-        const x=i*(bw+gap), y=H-bh;
-        const g=ctx.createLinearGradient(x,H,x,y);
-        g.addColorStop(0,'#ff2d55'); g.addColorStop(0.6,'#ff6b35'); g.addColorStop(1,'#ff9500');
-        ctx.fillStyle=g;
-        const r=Math.min(bw/2,3);
-        ctx.beginPath(); ctx.moveTo(x,H); ctx.lineTo(x,y+r);
-        ctx.quadraticCurveTo(x,y,x+r,y); ctx.lineTo(x+bw-r,y);
-        ctx.quadraticCurveTo(x+bw,y,x+bw,y+r); ctx.lineTo(x+bw,H);
-        ctx.closePath(); ctx.fill();
-        const rg=ctx.createLinearGradient(x,H,x,H+bh*.25);
-        rg.addColorStop(0,'rgba(255,45,85,0.18)'); rg.addColorStop(1,'rgba(255,45,85,0)');
-        ctx.fillStyle=rg; ctx.fillRect(x,H,bw,bh*.25);
+============================ */
+function drawBars(cv, data) {
+    if (!cv) return;
+    var ctx = cv.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var W = cv.width / dpr, H = cv.height / dpr;
+    ctx.clearRect(0, 0, W, H);
+    var cnt = data.length, gap = 2, bw = Math.max(1, (W - gap * (cnt - 1)) / cnt);
+    for (var i = 0; i < cnt; i++) {
+        var val = data[i] / 255, bh = Math.max(1, val * H * 0.85);
+        var x = i * (bw + gap), y = H - bh;
+        var g = ctx.createLinearGradient(x, H, x, y);
+        g.addColorStop(0, '#ff2d55');
+        g.addColorStop(0.6, '#ff6b35');
+        g.addColorStop(1, '#ff9500');
+        ctx.fillStyle = g;
+        var r = Math.min(bw / 2, 3);
+        ctx.beginPath();
+        ctx.moveTo(x, H);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.lineTo(x + bw - r, y);
+        ctx.quadraticCurveTo(x + bw, y, x + bw, y + r);
+        ctx.lineTo(x + bw, H);
+        ctx.closePath();
+        ctx.fill();
+        var rg = ctx.createLinearGradient(x, H, x, H + bh * 0.25);
+        rg.addColorStop(0, 'rgba(255,45,85,0.18)');
+        rg.addColorStop(1, 'rgba(255,45,85,0)');
+        ctx.fillStyle = rg;
+        ctx.fillRect(x, H, bw, bh * 0.25);
     }
 }
-function clearCv(cv){if(!cv)return;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);}
-function resizeCv(cv){if(!cv||!cv.parentElement)return;const r=cv.parentElement.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cv.getContext('2d').scale(d,d);}
 
-/* ============================================
+function clearCv(cv) {
+    if (!cv) return;
+    cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+}
+
+function resizeCv(cv) {
+    if (!cv || !cv.parentElement) return;
+    var r = cv.parentElement.getBoundingClientRect();
+    var d = window.devicePixelRatio || 1;
+    cv.width = r.width * d;
+    cv.height = r.height * d;
+    cv.getContext('2d').scale(d, d);
+}
+
+/* ============================
    SOHBET
-============================================ */
+============================ */
 function sendChat() {
-    const inp=$('iChat'), t=inp.value.trim(); if(!t)return;
-    const m={type:'chat',nick:S.nick,text:t,time:Date.now()};
-    wsSend(m); addChat(m); inp.value=''; inp.focus();
+    var inp = $('iChat'), t = inp.value.trim();
+    if (!t) return;
+    var m = {type:'chat', nick:S.nick, text:t, time:Date.now()};
+    wsSend(m);
+    addChat(m);
+    inp.value = '';
+    inp.focus();
 }
+
 function addChat(m) {
-    const c=$('chatMsgs'), r=document.createElement('div'); r.className='mr';
-    const col=nCol(m.nick), t=new Date(m.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
-    const me=m.nick===S.nick;
-    r.innerHTML='<span class="mn" style="color:'+col+'">'+esc(m.nick)+(me?' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>':'')+'</span><span class="mt">'+esc(m.text)+'</span><span class="mtime">'+t+'</span>';
-    c.appendChild(r); c.scrollTop=c.scrollHeight;
+    var c = $('chatMsgs'), r = document.createElement('div');
+    r.className = 'mr';
+    var col = nCol(m.nick);
+    var t = new Date(m.time).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+    var me = m.nick === S.nick;
+    r.innerHTML = '<span class="mn" style="color:' + col + '">' + esc(m.nick) + (me ? ' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>' : '') + '</span><span class="mt">' + esc(m.text) + '</span><span class="mtime">' + t + '</span>';
+    c.appendChild(r);
+    c.scrollTop = c.scrollHeight;
 }
+
 function addSys(t) {
-    const c=$('chatMsgs'), r=document.createElement('div'); r.className='msys'; r.textContent=t;
-    c.appendChild(r); c.scrollTop=c.scrollHeight;
+    var c = $('chatMsgs'), r = document.createElement('div');
+    r.className = 'msys';
+    r.textContent = t;
+    c.appendChild(r);
+    c.scrollTop = c.scrollHeight;
 }
 
-/* ============================================
+/* ============================
    MOBİL SOHBET
-============================================ */
+============================ */
 function initChatMob() {
-    $('btnChatTog').addEventListener('click',()=>{$('chatP').classList.add('open');$('cov').classList.add('open');});
-    $('btnChatX').addEventListener('click',closeCM);
-    $('cov').addEventListener('click',closeCM);
+    $('btnChatTog').addEventListener('click', function() {
+        $('chatP').classList.add('open');
+        $('cov').classList.add('open');
+    });
+    $('btnChatX').addEventListener('click', closeCM);
+    $('cov').addEventListener('click', closeCM);
 }
-function closeCM(){$('chatP').classList.remove('open');$('cov').classList.remove('open');}
 
-/* ============================================
-   PENCERE KAPANMA
-============================================ */
-window.addEventListener('beforeunload', () => {
-    if(S.broadcasting) wsSend({type:'broadcast-stop'});
-    if(ws) ws.close();
-});
-window.addEventListener('resize', () => {
-    if(S.mode==='broadcaster'&&!S.broadcasting) resizeCv($('cvBc'));
-    if(S.mode==='listener') resizeCv($('cvLs'));
+function closeCM() {
+    $('chatP').classList.remove('open');
+    $('cov').classList.remove('open');
+}
+
+/* ============================
+   PENCERE OLAYLARI
+============================ */
+window.addEventListener('beforeunload', function() {
+    if (S.broadcasting) wsSend({type:'broadcast-stop'});
+    if (ws) ws.close();
 });
 
-/* ============================================
+window.addEventListener('resize', function() {
+    if (S.mode === 'broadcaster' && !S.broadcasting) resizeCv($('cvBc'));
+    if (S.mode === 'listener') resizeCv($('cvLs'));
+});
+
+/* ============================
    BAŞLAT
-============================================ */
-document.addEventListener('DOMContentLoaded', () => {
+============================ */
+document.addEventListener('DOMContentLoaded', function() {
     wsConnect();
     initLogin();
     initChatMob();
     $('btnChatS').addEventListener('click', sendChat);
-    $('iChat').addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();} });
+    $('iChat').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+    });
 });
 </script>
 </body>
