@@ -26,6 +26,7 @@
 .float-orb{position:absolute;border-radius:50%;pointer-events:none;animation:fo 10s ease-in-out infinite}@keyframes fo{0%,100%{transform:translateY(0) translateX(0) scale(1)}33%{transform:translateY(-25px) translateX(12px) scale(1.1)}66%{transform:translateY(10px) translateX(-18px) scale(.9)}}
 .mode-card{border:2px solid var(--border);border-radius:14px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(255,255,255,.015)}
 .mode-card:hover{border-color:rgba(255,45,85,.4)}.mode-card.sel{border-color:var(--accent);background:rgba(255,45,85,.07);box-shadow:0 0 30px rgba(255,45,85,.12)}
+.hide-bc{display:none!important}
 .mode-card .ic{font-size:28px;margin-bottom:10px;color:var(--muted);transition:color .3s}.mode-card.sel .ic{color:var(--accent)}
 .inp{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg);padding:11px 14px;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
 .inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,45,85,.08)}.inp::placeholder{color:var(--muted)}
@@ -259,6 +260,7 @@ function esc(s){var d=document.createElement('div');d.textContent=s;return d.inn
 var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',warm:'#00b4d8'},yesil:{accent:'#00e676',warm:'#76ff03'},mor:{accent:'#cc5de8',warm:'#e040fb'},turuncu:{accent:'#ff9500',warm:'#ff6d00'}};
 function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style.setProperty('--accent',t.accent);document.documentElement.style.setProperty('--warm',t.warm);document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});try{localStorage.setItem('radio-theme',n);}catch(e){}}
 function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
+if(!location.search.includes('dj=1')){document.querySelectorAll('.mode-card').forEach(function(c){if(c.dataset.m==='broadcaster')c.classList.add('hide-bc');});}
 function initLogin(){
 var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo');
 var check=function(){btn.disabled=!($('iStation').value.trim()&&$('iNick').value.trim()&&S.mode);};
