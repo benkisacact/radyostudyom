@@ -245,7 +245,7 @@ var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceMod
 var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayProc=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0,lsAudioQ=[],LS_MAX_Q=60;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
-function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q)lsAudioQ.push(new Float32Array(e.data));}};}
+function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else if(e.data instanceof ArrayBuffer){if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q){var floatData=new Float32Array(e.data);lsAudioQ.push(floatData);}}}};}
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
 function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0});}
 function setConn(s){$('connDot').className='conn-dot '+s;}
@@ -332,7 +332,7 @@ bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').valu
 djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
 djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
 bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
-bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1)ws.send(e.inputBuffer.getChannelData(0).buffer);};bcMixGain.connect(bcSendProc);
+bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1){var input=e.inputBuffer.getChannelData(0);var output=new Float32Array(input.length);for(var i=0;i<input.length;i++)output[i]=input[i];ws.send(output.buffer);}};bcMixGain.connect(bcSendProc);
 bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
 bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
 bcFreqData=new Uint8Array(bcAnalyser.frequencyBinCount);

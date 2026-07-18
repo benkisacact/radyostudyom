@@ -30,7 +30,7 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (raw, isBinary) => {
         if (ws.blocked) return;
-        if (isBinary) {
+        if (isBinary || raw instanceof ArrayBuffer) {
             var st = stations.get(ws.station);
             if (st) {
                 st.listeners.forEach(function(l) {
@@ -72,8 +72,8 @@ wss.on('connection', (ws) => {
                     if (count > st.stats.peak) st.stats.peak = count;
                     ws.send(JSON.stringify({
                         type: 'joined', role: 'listener',
-                        active: !!st.bc, song: st.song,
-                        count: count, sampleRate: msg.sampleRate || 44100,
+                        active: !!st.bc, song: st.song || '',
+                        count: count, sampleRate: st.bc && st.bc.sampleRate ? st.bc.sampleRate : 44100,
                         schedule: st.schedule || []
                     }));
                     if (st.bc && st.bc.readyState === 1) {
@@ -141,10 +141,11 @@ wss.on('connection', (ws) => {
                 var s2 = stations.get(ws.station);
                 if (s2) {
                     s2.song = msg.song || '';
+                    ws.sampleRate = msg.sampleRate || 44100;
                     if (msg.schedule) s2.schedule = msg.schedule;
                     sendAll(ws.station, {
                         type: 'broadcast-start', nick: ws.nick, song: s2.song,
-                        sampleRate: msg.sampleRate || 44100, schedule: s2.schedule || []
+                        sampleRate: ws.sampleRate, schedule: s2.schedule || []
                     }, ws);
                 }
                 break;
