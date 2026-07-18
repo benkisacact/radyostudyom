@@ -6,13 +6,25 @@ const { WebSocketServer } = require('ws');
 const PORT = process.env.PORT || 3000;
 const stations = new Map();
 
+// Cache file read for better performance
+let indexHtmlCache = null;
+fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+    if (!err) indexHtmlCache = data;
+});
+
 const server = http.createServer((req, res) => {
     if (req.url === '/' || req.url === '/index.html') {
-        fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
-            if (err) { res.writeHead(500); res.end('Hata'); return; }
+        if (indexHtmlCache) {
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end(data);
-        });
+            res.end(indexHtmlCache);
+        } else {
+            fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+                if (err) { res.writeHead(500); res.end('Hata'); return; }
+                indexHtmlCache = data;
+                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(data);
+            });
+        }
     } else {
         res.writeHead(404);
         res.end();
@@ -31,15 +43,16 @@ wss.on('connection', (ws) => {
     ws.on('message', (raw, isBinary) => {
         if (ws.blocked) return;
         if (isBinary) {
-            var st = stations.get(ws.station);
+            const st = stations.get(ws.station);
             if (st) {
-                st.listeners.forEach(function(l) {
-                    if (!l.blocked && l.readyState === 1) l.send(raw, { binary: true });
+                const binaryMsg = Buffer.from(raw);
+                st.listeners.forEach(l => {
+                    if (!l.blocked && l.readyState === WebSocket.OPEN) l.send(binaryMsg);
                 });
             }
             return;
         }
-        var msg;
+        let msg;
         try { msg = JSON.parse(raw); } catch (e) { return; }
 
         switch (msg.type) {
@@ -55,7 +68,7 @@ wss.on('connection', (ws) => {
                         stats: { peak: 0, totalJoined: 0 }
                     });
                 }
-                var st = stations.get(ws.station);
+                const st = stations.get(ws.station);
                 if (st.blocked.has(ws.nick.toLowerCase())) {
                     ws.blocked = true;
                     ws.send(JSON.stringify({ type: 'blocked' }));
@@ -68,7 +81,7 @@ wss.on('connection', (ws) => {
                     ws.send(JSON.stringify({ type: 'joined', role: 'broadcaster' }));
                 } else {
                     st.listeners.add(ws);
-                    var count = st.listeners.size + (st.bc ? 1 : 0);
+                    const count = st.listeners.size + (st.bc ? 1 : 0);
                     if (count > st.stats.peak) st.stats.peak = count;
                     ws.send(JSON.stringify({
                         type: 'joined', role: 'listener',
@@ -76,7 +89,7 @@ wss.on('connection', (ws) => {
                         count: count, sampleRate: msg.sampleRate || 44100,
                         schedule: st.schedule || []
                     }));
-                    if (st.bc && st.bc.readyState === 1) {
+                    if (st.bc && st.bc.readyState === WebSocket.OPEN) {
                         st.bc.send(JSON.stringify({ type: 'listener-update', count: count, stats: st.stats }));
                     }
                 }
@@ -89,11 +102,11 @@ wss.on('connection', (ws) => {
 
             case 'request':
                 if (!ws.station || ws.role !== 'listener') return;
-                var stR = stations.get(ws.station);
+                const stR = stations.get(ws.station);
                 if (stR) {
-                    var req = { id: Date.now() + Math.random(), nick: ws.nick, song: msg.song, time: Date.now() };
+                    const req = { id: Date.now() + Math.random(), nick: ws.nick, song: msg.song, time: Date.now() };
                     stR.requests.push(req);
-                    if (stR.bc && stR.bc.readyState === 1) {
+                    if (stR.bc && stR.bc.readyState === WebSocket.OPEN) {
                         stR.bc.send(JSON.stringify({ type: 'new-request', request: req, queue: stR.requests }));
                     }
                     ws.send(JSON.stringify({ type: 'request-sent' }));
@@ -102,16 +115,16 @@ wss.on('connection', (ws) => {
 
             case 'request-action':
                 if (!ws.station || ws.role !== 'broadcaster') return;
-                var stA = stations.get(ws.station);
+                const stA = stations.get(ws.station);
                 if (stA) {
-                    var removed = null;
-                    stA.requests = stA.requests.filter(function(r) {
+                    let removed = null;
+                    stA.requests = stA.requests.filter(r => {
                         if (r.id === msg.requestId) { removed = r; return false; }
                         return true;
                     });
                     if (msg.accepted && removed) {
-                        stA.listeners.forEach(function(l) {
-                            if (l.readyState === 1 && l.nick === removed.nick) {
+                        stA.listeners.forEach(l => {
+                            if (l.readyState === WebSocket.OPEN && l.nick === removed.nick) {
                                 l.send(JSON.stringify({ type: 'request-accepted', song: removed.song }));
                             }
                         });
@@ -122,14 +135,14 @@ wss.on('connection', (ws) => {
 
             case 'block-listener':
                 if (!ws.station || ws.role !== 'broadcaster') return;
-                var stB = stations.get(ws.station);
+                const stB = stations.get(ws.station);
                 if (stB) {
                     stB.blocked.add(msg.nick.toLowerCase());
-                    stB.listeners.forEach(function(l) {
+                    stB.listeners.forEach(l => {
                         if (l.nick && l.nick.toLowerCase() === msg.nick.toLowerCase()) {
                             l.blocked = true;
                             l.send(JSON.stringify({ type: 'blocked' }));
-                            setTimeout(function() { try { l.close(); } catch(e) {} }, 500);
+                            setTimeout(() => { try { l.close(); } catch(e) {} }, 500);
                         }
                     });
                     sendAll(ws.station, { type: 'system', text: msg.nick + ' yayindan atildi' }, ws);
@@ -138,7 +151,7 @@ wss.on('connection', (ws) => {
 
             case 'broadcast-start':
                 if (!ws.station) return;
-                var s2 = stations.get(ws.station);
+                const s2 = stations.get(ws.station);
                 if (s2) {
                     s2.song = msg.song || '';
                     if (msg.schedule) s2.schedule = msg.schedule;
@@ -151,11 +164,11 @@ wss.on('connection', (ws) => {
 
             case 'broadcast-stop':
                 if (!ws.station) return;
-                var s3 = stations.get(ws.station);
+                const s3 = stations.get(ws.station);
                 if (s3) {
                     s3.bc = null; s3.song = '';
                     sendAll(ws.station, { type: 'broadcast-stop' });
-                    s3.listeners.forEach(function(l) { try { l.close(); } catch(e) {} });
+                    s3.listeners.forEach(l => { try { l.close(); } catch(e) {} });
                     s3.listeners.clear();
                     stations.delete(ws.station);
                 }
@@ -163,41 +176,41 @@ wss.on('connection', (ws) => {
 
             case 'song-update':
                 if (!ws.station) return;
-                var s4 = stations.get(ws.station);
+                const s4 = stations.get(ws.station);
                 if (s4) { s4.song = msg.song || ''; sendAll(ws.station, { type: 'song-update', song: s4.song }, ws); }
                 break;
 
             case 'update-schedule':
                 if (!ws.station || ws.role !== 'broadcaster') return;
-                var s5 = stations.get(ws.station);
+                const s5 = stations.get(ws.station);
                 if (s5) { s5.schedule = msg.schedule || []; sendAll(ws.station, { type: 'schedule-update', schedule: s5.schedule }, ws); }
                 break;
         }
     });
 
-    ws.on('close', function() {
+    ws.on('close', () => {
         if (!ws.station || !stations.has(ws.station)) return;
-        var st = stations.get(ws.station);
+        const st = stations.get(ws.station);
         if (ws.role === 'broadcaster') {
             st.bc = null; st.song = '';
             sendAll(ws.station, { type: 'broadcast-stop' });
-            st.listeners.forEach(function(l) { try { l.close(); } catch(e) {} });
+            st.listeners.forEach(l => { try { l.close(); } catch(e) {} });
             st.listeners.clear();
             stations.delete(ws.station);
         } else if (ws.role === 'listener' && !ws.blocked) {
             st.listeners.delete(ws);
-            var cnt = st.listeners.size + (st.bc ? 1 : 0);
-            if (st.bc && st.bc.readyState === 1) {
+            const cnt = st.listeners.size + (st.bc ? 1 : 0);
+            if (st.bc && st.bc.readyState === WebSocket.OPEN) {
                 st.bc.send(JSON.stringify({ type: 'listener-update', count: cnt, stats: st.stats }));
             }
         }
     });
 
-    ws.on('pong', function() { ws.alive = true; });
+    ws.on('pong', () => { ws.alive = true; });
 });
 
-setInterval(function() {
-    wss.clients.forEach(function(ws) {
+setInterval(() => {
+    wss.clients.forEach(ws => {
         if (!ws.alive) return ws.terminate();
         ws.alive = false;
         ws.ping();
@@ -205,12 +218,12 @@ setInterval(function() {
 }, 30000);
 
 function sendAll(station, msg, exclude) {
-    var st = stations.get(station);
+    const st = stations.get(station);
     if (!st) return;
-    var data = JSON.stringify(msg);
-    if (st.bc && st.bc !== exclude && st.bc.readyState === 1) st.bc.send(data);
-    st.listeners.forEach(function(l) {
-        if (l !== exclude && !l.blocked && l.readyState === 1) l.send(data);
+    const data = JSON.stringify(msg);
+    if (st.bc && st.bc !== exclude && st.bc.readyState === WebSocket.OPEN) st.bc.send(data);
+    st.listeners.forEach(l => {
+        if (l !== exclude && !l.blocked && l.readyState === WebSocket.OPEN) l.send(data);
     });
 }
 

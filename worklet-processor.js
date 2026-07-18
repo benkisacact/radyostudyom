@@ -14,23 +14,30 @@ class PlayerProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.queue = [];
+    this.maxQueueSize = 50;
     this.port.onmessage = (e) => {
+      if (this.queue.length >= this.maxQueueSize) {
+        this.queue.shift();
+      }
       this.queue.push(e.data);
-      if (this.queue.length > 50) this.queue.shift();
     };
   }
   process(inputs, outputs) {
     const output = outputs[0];
-    if (output && output.length > 0) {
-      const channelData = output[0];
-      if (this.queue.length > 0) {
-        const chunk = this.queue.shift();
-        for (let i = 0; i < chunk.length; i++) {
-          channelData[i] = chunk[i];
-        }
-      } else {
-        for (let i = 0; i < channelData.length; i++) channelData[i] = 0;
+    if (!output || output.length === 0) return true;
+    
+    const channelData = output[0];
+    const len = channelData.length;
+    
+    if (this.queue.length > 0) {
+      const chunk = this.queue.shift();
+      const copyLen = Math.min(chunk.length, len);
+      channelData.set(chunk.subarray(0, copyLen));
+      if (copyLen < len) {
+        channelData.fill(0, copyLen);
       }
+    } else {
+      channelData.fill(0);
     }
     return true;
   }

@@ -1,0 +1,1 @@
+Nothing should be ignored based on the provided file changes, as they only include source files (`server.js`, `worklet-processor.js`) without any build artifacts, dependencies, or temporary files.
