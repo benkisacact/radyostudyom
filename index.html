@@ -96,6 +96,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
 <div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"></div>
 <div id="modeCards" class="grid grid-cols-2 gap-3 mb-6">
+<input id="iPin" class="inp hidden" type="password" placeholder="Yayıncı PIN" maxlength="10">
 <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
 <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
 </div>
@@ -246,9 +247,24 @@ var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceMod
 var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayProc=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0,lsAudioQ=[],LS_MAX_Q=60;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
-function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q)lsAudioQ.push(new Float32Array(e.data));}};}
+function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){
+    if(typeof e.data==='string'){
+        try{handleMsg(JSON.parse(e.data));}catch(err){}
+    } else {
+        if(S.listening && lsPlayNode){
+            // Gelen binary veriyi doğrudan Player Worklet'e gönder
+            lsPlayNode.port.postMessage(new Float32Array(e.data));
+        }
+    }
+};
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
-function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0});}
+function doJoin(){
+    wsSend({
+        type:'join', station:S.station, nick:S.nick, role:S.mode, 
+        sampleRate: S.mode==='broadcaster' ? 44100 : 0,
+        pin: $('iPin').value.trim() // PIN'i sunucuya gönder
+    });
+}
 function setConn(s){$('connDot').className='conn-dot '+s;}
 var $=function(id){return document.getElementById(id);};
 var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
@@ -265,16 +281,36 @@ function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}
 if(!location.search.includes('dj=1')){document.querySelectorAll('.mode-card').forEach(function(c){if(c.dataset.m==='broadcaster')c.classList.add('hide-bc');});}
 
 function initLogin(){
-var cards=document.querySelectorAll('.mode-card:not(.hide-bc)'),btn=$('btnGo');
-var check=function(){btn.disabled=!($('iStation').value.trim()&&$('iNick').value.trim()&&S.mode);};
-cards.forEach(function(c){var go=function(){cards.forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');S.mode=c.dataset.m;check();};c.addEventListener('click',go);c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
- $('iStation').addEventListener('input',check);$('iNick').addEventListener('input',check);
+var cards=document.querySelectorAll('.mode-card:not(.hide-bc)'),btn=$('btnGo'),pinInp=$('iPin');
+var check=function(){
+    var isValid = $('iStation').value.trim() && $('iNick').value.trim() && S.mode;
+    if(S.mode === 'broadcaster') isValid = isValid && pinInp.value.trim();
+    btn.disabled = !isValid;
+};
+cards.forEach(function(c){
+    var go=function(){
+        cards.forEach(function(x){x.classList.remove('sel');});
+        c.classList.add('sel');S.mode=c.dataset.m;check();
+        // Yayıncı seçilince PIN inputunu göster
+        if(S.mode === 'broadcaster') pinInp.classList.remove('hidden');
+        else pinInp.classList.add('hidden');
+    };
+    c.addEventListener('click',go);
+    c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+});
+ $('iStation').addEventListener('input',check);
+ $('iNick').addEventListener('input',check);
+ pinInp.addEventListener('input',check); // PIN yazınca butonu aktif et
+
 btn.addEventListener('click',function(){
-if(btn.disabled)return;S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
+if(btn.disabled)return;
+S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
  $('login').classList.add('hidden');$('app').classList.remove('hidden');
  $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
 if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
- $('fStatus').textContent=S.nick+' olarak giris yaptiniz';if(ws&&ws.readyState===1)doJoin();});}
+ $('fStatus').textContent=S.nick+' olarak giris yaptiniz';
+ if(ws&&ws.readyState===1) doJoin();
+});}
 
 function handleMsg(m){
 switch(m.type){
@@ -291,6 +327,8 @@ case'request-sent':$('reqSentMsg').classList.remove('hidden');setTimeout(functio
 case'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong').textContent=m.song;setTimeout(function(){$('reqAccMsg').classList.add('hidden');},5000);break;
 case'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
 case'schedule-update':if(S.mode==='listener')renderSch(m.schedule,false);break;
+// handleMsg içindeki switch'e bunu ekle:
+case 'error': toast(m.message); break;
 }}
 function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
 function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
@@ -321,6 +359,32 @@ function toggleBc(){
 if(S.broadcasting){stopBc();return;}
 var devId=$('selMic').value;var cons=(devId&&devId!=='')?{audio:{deviceId:{exact:devId}}}:{audio:true};
 navigator.mediaDevices.getUserMedia(cons).then(function(stream){
+    // toggleBc içindeki eski bcSendProc satırlarını silip bunları ekle:
+bcAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(() => {
+    bcSendNode = new AudioWorkletNode(bcAudioCtx, 'recorder-worklet', { numberOfInputs: 1, numberOfOutputs: 0 });
+    bcSendNode.port.onmessage = function(e) {
+        if(ws && ws.readyState === 1) ws.send(e.data.buffer);
+    };
+    bcMixGain.connect(bcSendNode);
+    
+    // Worklet'i sessizce destination'a bağla (bazı tarayıcılar için gerekli)
+    bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;
+    bcSendNode.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
+    
+    bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
+    
+    // ... (Yayın başlatma bildirimleri ve diğer kodlar burada olacak)
+    S.broadcasting=true;S.bcStart=Date.now();S.song=$('iSong').value.trim();
+    $('btnBc').textContent='YAYINI DURDUR';$('btnBc').classList.add('stop');$('btnMic').disabled=false;$('iSong').disabled=false;
+    $('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');$('fStatus').textContent='Yayin aktif';
+    $('btnRec').disabled=false;$('btnAd').disabled=false;
+    S.timerInt=setInterval(function(){$('tmBc').textContent=fmtT((Date.now()-S.bcStart)/1000);if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);},1000);
+    wsSend({type:'broadcast-start',song:S.song,sampleRate:bcAudioCtx.sampleRate,schedule:S.schedule});addSys('Yayin basladi!');vizBc();toast('Yayin baslatildi');
+
+}).catch(err => {
+    toast('AudioWorklet yüklenemedi!');
+    console.error(err);
+});
 bcMic=stream;bcAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
 bcAnalyser=bcAudioCtx.createAnalyser();bcAnalyser.fftSize=128;bcAnalyser.smoothingTimeConstant=0.8;
 bcGain=bcAudioCtx.createGain();bcGain.gain.value=0;
@@ -397,7 +461,30 @@ function saveSch(){var rows=$('schBody').querySelectorAll('tr'),sch=[];rows.forE
 function renderSch(data,isBc){var tb=isBc?$('schBody'):$('schBodyLs');tb.innerHTML='';if(!data||!data.length){tb.innerHTML='<tr><td colspan="'+(isBc?3:2)+'" class="text-center py-4" style="color:var(--muted)">Program yok</td></tr>';return;}var now=new Date(),nowMin=now.getHours()*60+now.getMinutes();for(var i=0;i<data.length;i++){var p=data[i],pts=p.time.split(':'),min=parseInt(pts[0])*60+parseInt(pts[1]);var isCur=nowMin>=min&&(i===data.length-1||nowMin<parseInt(data[i+1].time.split(':')[0])*60+parseInt(data[i+1].time.split(':')[1]));var tr=document.createElement('tr');if(isCur)tr.className='current-row';tr.innerHTML='<td>'+p.time+'</td><td>'+esc(p.name)+'</td>'+(isBc?'<td></td>':'');tb.appendChild(tr);}}
 function setupLs(){$('btnLs').addEventListener('click',toggleLs);$('rngVol').addEventListener('input',function(){if(lsGain)lsGain.gain.value=parseInt($('rngVol').value)/100;});$('btnReqSend').addEventListener('click',sendReq);$('iReqSong').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendReq();}});resizeCv($('cvLs'));}
 function sendReq(){var t=$('iReqSong').value.trim();if(!t||!S.broadcastActive)return;wsSend({type:'request',song:t});$('iReqSong').value='';}
-function toggleLs(){if(S.listening){stopListening();return;}if(!S.broadcastActive)return;lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;lsPlayProc=lsAudioCtx.createScriptProcessor(2048,0,1);lsPlayProc.onaudioprocess=function(e){var out=e.outputBuffer.getChannelData(0);if(lsAudioQ.length>0){var ch=lsAudioQ.shift();for(var i=0;i<out.length;i++)out[i]=i<ch.length?ch[i]:0;}else{for(var j=0;j<out.length;j++)out[j]=0;}};lsPlayProc.connect(lsGain);lsGain.connect(lsAnalyser);lsAnalyser.connect(lsAudioCtx.destination);lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);lsAudioQ.length=0;S.listening=true;S.lsStart=Date.now();$('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);vizLs();}
+function toggleLs(){
+    if(S.listening){stopListening();return;}
+    if(!S.broadcastActive)return;
+    lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});
+    
+    lsAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(() => {
+        lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;
+        lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;
+        
+        lsPlayNode = new AudioWorkletNode(lsAudioCtx, 'player-worklet', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1] });
+        lsPlayNode.connect(lsGain);
+        lsGain.connect(lsAnalyser);
+        lsAnalyser.connect(lsAudioCtx.destination);
+        
+        lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);
+        lsAudioQ.length=0;S.listening=true;S.lsStart=Date.now();
+        $('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');
+        S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);
+        vizLs();
+    }).catch(err => {
+        toast('Ses modülü yüklenemedi!');
+        console.error(err);
+    });
+}
 function stopListening(){S.listening=false;if(lsPlayProc)try{lsPlayProc.disconnect();}catch(e){}lsPlayProc=null;if(lsAudioCtx)lsAudioCtx.close();lsAudioCtx=lsAnalyser=lsGain=null;if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}clearInterval(S.timerInt);lsAudioQ.length=0;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('vinLs').classList.remove('spin');$('tmLs').textContent='00:00:00';$('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));}
 function vizBc(){if(!S.broadcasting||!bcAnalyser)return;bcRafId=requestAnimationFrame(vizBc);bcAnalyser.getByteFrequencyData(bcFreqData);var len=bcFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=bcFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL','vuPL',Math.min(100,(sL/(len/2))*100*(.92+Math.random()*.16)),true);setVU('vuFR','vuPR',Math.min(100,(sR/(len/2))*100*(.92+Math.random()*.16)),false);drawBars($('cvBc'),bcFreqData);}
 function vizLs(){if(!S.listening||!lsAnalyser)return;lsRafId=requestAnimationFrame(vizLs);lsAnalyser.getByteFrequencyData(lsFreqData);var len=lsFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=lsFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL2','vuPL2',Math.min(100,(sL/(len/2))*100),true);setVU('vuFR2','vuPR2',Math.min(100,(sR/(len/2))*100),false);drawBars($('cvLs'),lsFreqData);}
