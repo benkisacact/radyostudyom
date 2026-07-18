@@ -78,6 +78,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .drop-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(255,45,85,.04)}
 .np-marquee{overflow:hidden;white-space:nowrap}.np-marquee span{display:inline-block;animation:mq 12s linear infinite}@keyframes mq{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+.online-user{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:860px){.chat-p{position:fixed;right:-320px;top:0;bottom:0;z-index:100;transition:right .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.5);height:100vh}.chat-p.open{right:0}.cbtn{display:flex}}
 @media(max-width:600px){.vm{width:160px!important;height:160px!important}.vlm{width:50px!important;height:50px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:100px!important}.cg{flex-direction:column!important}}
 @media(prefers-reduced-motion:reduce){.vinyl.spin,.login-bg,.float-orb,.on-air-dot.active,.rec-dot{animation:none!important}.mr{animation:none!important}*{transition-duration:.01ms!important}}
@@ -236,7 +237,17 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </main>
 
 <aside id="chatP" class="chat-p">
-<div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)"><h2 class="font-display text-xs font-bold tracking-widest">SOHBET</h2><div class="flex items-center gap-2"><span id="chatOn" class="badge">0</span><button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer"><i class="fas fa-times"></i></button></div></div>
+<div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)">
+    <h2 class="font-display text-xs font-bold tracking-widest">SOHBET</h2>
+    <div class="flex items-center gap-2">
+        <span id="chatOn" class="badge">0</span>
+        <button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer"><i class="fas fa-times"></i></button>
+    </div>
+</div>
+<div id="userListBox" class="px-4 py-2 border-b" style="border-color:var(--border);background:rgba(0,0,0,.2)">
+    <div class="text-[10px] font-semibold tracking-wider mb-1" style="color:var(--muted)">ONLINE KULLANICILAR (<span id="userCount">0</span>)</div>
+    <div id="userListItems" class="flex flex-wrap gap-1.5" style="max-height:60px;overflow-y:auto;scrollbar-width:thin"></div>
+</div>
 <div id="chatMsgs" class="chat-msgs" role="log" aria-live="polite"></div>
 <div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesaj yazin..." maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
 </aside></div>
@@ -292,7 +303,9 @@ case'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong')
 case'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
 case'error':if(m.reason==='nick-taken'){toast('Bu rumuz zaten kullaniliyor!');setTimeout(function(){location.reload();},2500);}else if(m.reason==='wrong-pin'){toast('Yayinci PIN hatali!');setTimeout(function(){location.reload();},2500);}break;
 case'schedule-update':if(S.mode==='listener')renderSch(m.schedule,false);break;
+case'user-list':renderUserList(m.users);break;
 }}
+function renderUserList(users){var c=$('userListItems');$('userCount').textContent=users.length;if(!c)return;c.innerHTML='';for(var i=0;i<users.length;i++){var u=users[i];var col=nCol(u.nick);var isBc=u.role==='broadcaster';var span=document.createElement('span');span.className='online-user';span.style.background=isBc?'rgba(255,45,85,.15)':'rgba(255,255,255,.05)';span.style.color=isBc?'var(--accent)':col;span.style.border='1px solid '+(isBc?'rgba(255,45,85,.3)':'var(--border)');span.innerHTML='<i class="fas '+(isBc?'fa-microphone':'fa-headphones')+'" style="font-size:9px"></i> '+esc(u.nick);c.appendChild(span);}}
 function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
 function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
 function updCount(n){S.listenerCount=n;$('hdrLis').innerHTML='<i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>'+n;$('chatOn').textContent=n;}

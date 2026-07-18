@@ -4,7 +4,7 @@ const path = require('path');
 const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 3000;
-const BROADCASTER_PIN = '1234'; // Yayıncı güvenlik PIN'ini buradan değiştirebilirsin
+const BROADCASTER_PIN = '1234'; // Yayıncı güvenlik PIN'i
 const stations = new Map();
 const activeNicks = new Set(); // Sistemdeki tüm benzersiz rumuzlar
 
@@ -51,21 +51,19 @@ wss.on('connection', (ws) => {
             case 'join':
                 var lowerNick = (msg.nick || '').toLowerCase().trim();
                 
-                // 1. Rumuz boşsa veya başkası tarafından kullanılıyorsa engelle
                 if (!lowerNick || activeNicks.has(lowerNick)) {
                     ws.send(JSON.stringify({ type: 'error', reason: 'nick-taken' }));
                     ws.close();
                     return;
                 }
                 
-                // 2. Yayıncı ise PIN kontrolü yap
                 if (msg.role === 'broadcaster' && msg.pin !== BROADCASTER_PIN) {
                     ws.send(JSON.stringify({ type: 'error', reason: 'wrong-pin' }));
                     ws.close();
                     return;
                 }
 
-                activeNicks.add(lowerNick); // Rumuzu sisteme kaydet
+                activeNicks.add(lowerNick);
                 ws.station = msg.station;
                 ws.nick = msg.nick;
                 ws.role = msg.role;
@@ -75,7 +73,8 @@ wss.on('connection', (ws) => {
                         bc: null, song: '', listeners: new Set(),
                         requests: [], blocked: new Set(),
                         schedule: [],
-                        stats: { peak: 0, totalJoined: 0 }
+                        stats: { peak: 0, totalJoined: 0 },
+                        onlineUsers: {} // Yeni: Online kullanıcıları tutacak nesne
                     });
                 }
                 var st = stations.get(ws.station);
@@ -86,10 +85,11 @@ wss.on('connection', (ws) => {
                     return;
                 }
                 st.stats.totalJoined++;
+                st.onlineUsers[ws.nick] = ws.role; // Kullanıcıyı listeye ekle
+                
                 if (msg.role === 'broadcaster') {
                     st.bc = ws;
                     ws.send(JSON.stringify({ type: 'joined', role: 'broadcaster' }));
-                    /* Yayinci baglandiginda halihazirda bekleyen dinleyiciler varsa sayiyi gonder */
                     var initCount = st.listeners.size + 1;
                     if (initCount > st.stats.peak) st.stats.peak = initCount;
                     ws.send(JSON.stringify({
@@ -115,6 +115,9 @@ wss.on('connection', (ws) => {
                         }));
                     }
                 }
+                
+                // Herkesin kullanıcı listesini güncelle
+                sendUserList(ws.station);
                 break;
 
             case 'chat':
@@ -122,7 +125,7 @@ wss.on('connection', (ws) => {
                 sendAll(ws.station, {
                     type: 'chat', nick: ws.nick,
                     text: msg.text, time: Date.now()
-                }, ws); // ws ekleyerek mesajı gönderene geri yollamayı engelledik
+                }, ws);
                 break;
 
             case 'request':
@@ -255,9 +258,15 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        if (ws.nick) activeNicks.delete(ws.nick.toLowerCase()); // Kişi çıkınca rumuzu listeden sil
+        if (ws.nick) activeNicks.delete(ws.nick.toLowerCase());
         if (!ws.station || !stations.has(ws.station)) return;
         var st = stations.get(ws.station);
+        
+        // Kullanıcı listeden çıkar
+        if (st.onlineUsers) {
+            delete st.onlineUsers[ws.nick];
+        }
+
         if (ws.role === 'broadcaster') {
             st.bc = null;
             st.song = '';
@@ -277,6 +286,7 @@ wss.on('connection', (ws) => {
                     stats: st.stats
                 }));
             }
+            sendUserList(ws.station); // Kalanlara güncel listeyi gönder
         }
     });
 
@@ -303,6 +313,17 @@ function sendAll(station, msg, exclude) {
             l.send(data);
         }
     });
+}
+
+// Yeni: Online kullanıcı listesini herkese gönderen fonksiyon
+function sendUserList(station) {
+    var st = stations.get(station);
+    if (!st) return;
+    var users = [];
+    for (var nick in st.onlineUsers) {
+        users.push({ nick: nick, role: st.onlineUsers[nick] });
+    }
+    sendAll(station, { type: 'user-list', users: users });
 }
 
 server.listen(PORT, () => {
