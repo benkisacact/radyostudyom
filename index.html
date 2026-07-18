@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Radyo DJ Stüdyo v3 (AI + Worklet)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>tailwind.config={theme:{extend:{colors:{bg:'#08080e',surface:'#0e0e18',card:'#151522',border:'#252538',accent:'#ff2d55',warm:'#ff9500',muted:'#555570',fg:'#dddde8'},fontFamily:{display:['Orbitron','sans-serif'],body:['Space Grotesk','sans-serif']}}}}</script>
+<style>
+:root{--accent:#ff2d55;--warm:#ff9500;--bg:#08080e;--surface:#0e0e18;--card:#151522;--border:#252538;--fg:#dddde8;--muted:#555570}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden;min-height:100vh}
+.bg-atm{background-image:radial-gradient(ellipse at 15% 50%,rgba(255,45,85,.05) 0%,transparent 60%),radial-gradient(ellipse at 85% 30%,rgba(255,149,0,.04) 0%,transparent 50%),linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:100%,100%,50px 50px,50px 50px}
+.on-air-dot{width:10px;height:10px;border-radius:50%;background:#333;flex-shrink:0;transition:all .3s}
+.on-air-dot.active{background:var(--accent);box-shadow:0 0 6px var(--accent),0 0 16px var(--accent),0 0 36px rgba(255,45,85,.25);animation:pd 1.4s ease-in-out infinite}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.45}}
+.vinyl{border-radius:50%;background:radial-gradient(circle,#111 17%,transparent 17.5%),radial-gradient(circle,transparent 18.5%,#1a1a1a 19%,#1a1a1a 19.8%,transparent 20.3%),radial-gradient(circle,transparent 23.5%,#151515 24%,#151515 24.8%,transparent 25.3%),radial-gradient(circle,transparent 28.5%,#1a1a1a 29%,#1a1a1a 29.8%,transparent 30.3%),radial-gradient(circle,transparent 33.5%,#151515 34%,#151515 34.8%,transparent 35.3%),radial-gradient(circle,transparent 38.5%,#1a1a1a 39%,#1a1a1a 39.8%,transparent 40.3%),radial-gradient(circle,transparent 43.5%,#151515 44%,#151515 44.8%,transparent 45.3%),radial-gradient(circle,transparent 48.5%,#1a1a1a 49%,#1a1a1a 49.8%,transparent 50.3%),radial-gradient(circle,transparent 53.5%,#151515 54%,#151515 54.8%,transparent 55.3%),radial-gradient(circle,transparent 58.5%,#1a1a1a 59%,#1a1a1a 59.8%,transparent 60.3%),radial-gradient(circle,transparent 63.5%,#151515 64%,#151515 64.8%,transparent 65.3%),radial-gradient(circle,transparent 68.5%,#1a1a1a 69%,#1a1a1a 69.8%,transparent 70.3%),radial-gradient(circle,transparent 73.5%,#151515 74%,#151515 74.8%,transparent 75.3%),radial-gradient(circle,transparent 78.5%,#1a1a1a 79%,#1a1a1a 79.8%,transparent 80.3%),radial-gradient(circle,transparent 83.5%,#151515 84%,#151515 84.8%,transparent 85.3%),radial-gradient(circle,transparent 88.5%,#1a1a1a 89%,#1a1a1a 89.8%,transparent 90.3%),radial-gradient(circle,transparent 93.5%,#151515 94%,#151515 94.8%,transparent 95.3%),conic-gradient(from 0deg,#0c0c0c,#181818,#0c0c0c,#181818,#0c0c0c,#181818,#0c0c0c,#181818);box-shadow:0 0 0 3px #1a1a1a,0 0 40px rgba(0,0,0,.7);position:relative;flex-shrink:0}
+.vinyl.spin{animation:sv 1.8s linear infinite}@keyframes sv{to{transform:rotate(360deg)}}
+.vinyl-lbl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background:linear-gradient(135deg,var(--accent),#b81040);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-weight:700;color:#fff;text-align:center;line-height:1.2;box-shadow:inset 0 0 15px rgba(0,0,0,.3);pointer-events:none}
+.vinyl-hole{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background:#222;box-shadow:inset 0 1px 3px rgba(255,255,255,.15);pointer-events:none}
+.vu-bar{width:22px;background:#0a0a0f;border-radius:3px;border:1px solid #1c1c2c;position:relative;overflow:hidden}
+.vu-fill{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 2px 2px;background:linear-gradient(to top,#00e676 0%,#00e676 55%,#ffea00 55%,#ffea00 78%,#ff1744 78%,#ff1744 100%);transition:height 50ms linear}
+.vu-peak{position:absolute;left:0;right:0;height:2px;background:#ff1744;box-shadow:0 0 5px #ff1744;transition:bottom .25s ease-out}
+.login-bg{position:absolute;right:-120px;top:50%;transform:translateY(-50%);width:440px;height:440px;opacity:.12;animation:sv 12s linear infinite;pointer-events:none}
+.float-orb{position:absolute;border-radius:50%;pointer-events:none;animation:fo 10s ease-in-out infinite}@keyframes fo{0%,100%{transform:translateY(0) translateX(0) scale(1)}33%{transform:translateY(-25px) translateX(12px) scale(1.1)}66%{transform:translateY(10px) translateX(-18px) scale(.9)}}
+.mode-card{border:2px solid var(--border);border-radius:14px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(255,255,255,.015)}
+.mode-card:hover{border-color:rgba(255,45,85,.4)}.mode-card.sel{border-color:var(--accent);background:rgba(255,45,85,.07);box-shadow:0 0 30px rgba(255,45,85,.12)}
+.mode-card .ic{font-size:28px;margin-bottom:10px;color:var(--muted);transition:color .3s}.mode-card.sel .ic{color:var(--accent)}
+.inp{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg);padding:11px 14px;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,45,85,.08)}.inp::placeholder{color:var(--muted)}
+select.inp{cursor:pointer}select.inp option{background:#1a1a2a;color:var(--fg)}
+.btn{background:linear-gradient(135deg,var(--accent),#c41040);color:#fff;border:none;padding:13px 36px;border-radius:10px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(255,45,85,.25)}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 28px rgba(255,45,85,.4)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.stop{background:linear-gradient(135deg,#2a2a35,#1e1e28);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.btn-sm{padding:6px 14px;font-size:11px;letter-spacing:1px;border-radius:6px}
+.btn-ghost{background:rgba(255,255,255,.06);box-shadow:none;border:1px solid var(--border);color:var(--fg)}.btn-ghost:hover{background:rgba(255,255,255,.1);box-shadow:none;transform:none}
+.btn-green{background:linear-gradient(135deg,#00c853,#00897b);box-shadow:0 4px 12px rgba(0,200,83,.2)}.btn-red{background:linear-gradient(135deg,#ff1744,#c62828);box-shadow:0 4px 12px rgba(255,23,68,.2)}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;width:100%}
+input[type=range]::-webkit-slider-track{height:4px;background:#1c1c2c;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);margin-top:-5px;box-shadow:0 0 6px rgba(255,45,85,.4)}
+input[type=range]::-moz-range-track{height:4px;background:#1c1c2c;border-radius:2px;border:none}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:none}
+.chat-p{width:310px;min-width:310px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;height:calc(100vh - 108px)}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:#2a2a3a transparent}.chat-msgs::-webkit-scrollbar{width:3px}.chat-msgs::-webkit-scrollbar-thumb{background:#2a2a3a;border-radius:2px}
+.chat-inp{padding:10px;border-top:1px solid var(--border);display:flex;gap:8px}
+.chat-inp button{background:var(--accent);border:none;color:#fff;width:38px;height:38px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0}.chat-inp button:hover{background:#e02048}
+.mr{margin-bottom:8px;animation:ms .25s ease}@keyframes ms{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mn{font-weight:600;font-size:12px;margin-right:6px}.mt{font-size:13px;color:#bbb;word-break:break-word}.mtime{font-size:10px;color:var(--muted);margin-left:6px}
+.msys{font-size:11px;color:var(--muted);text-align:center;padding:4px 0;font-style:italic}
+.badge{background:rgba(255,45,85,.12);border:1px solid rgba(255,45,85,.25);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;font-family:'Space Grotesk',sans-serif}
+.toast-el{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--card);border:1px solid var(--border);padding:10px 22px;border-radius:10px;font-size:13px;z-index:9999;transition:transform .4s cubic-bezier(.175,.885,.32,1.275);box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+.toast-el.show{transform:translateX(-50%) translateY(0)}.hdr-live{border-top:2px solid var(--accent);box-shadow:0 2px 20px rgba(255,45,85,.15)}
+.cbtn{display:none}.cov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}.cov.open{display:block}
+.conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}.conn-dot.ok{background:#00e676;box-shadow:0 0 6px #00e676}.conn-dot.no{background:#ff1744;box-shadow:0 0 6px #ff1744}.conn-dot.wait{background:#ffea00;box-shadow:0 0 6px #ffea00;animation:pd 1s ease-in-out infinite}
+.tab-bar{display:flex;gap:2px;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;overflow-x:auto;scrollbar-width:none}.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap;font-family:'Space Grotesk',sans-serif}
+.tab-btn:hover{color:var(--fg);background:rgba(255,255,255,.04)}.tab-btn.act{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(255,45,85,.3)}
+.tab-content{display:none}.tab-content.act{display:block}
+.pl-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+.pl-item:hover{background:rgba(255,255,255,.04)}.pl-item.playing{background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.2)}
+.pl-idx{font-size:11px;color:var(--muted);min-width:20px;text-align:center}.pl-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-dur{font-size:11px;color:var(--muted);min-width:36px;text-align:right}.pl-del{color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s}.pl-del:hover{color:#ff1744}
+.fx-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02)}
+.fx-btn:hover{border-color:var(--accent);background:rgba(255,45,85,.06);transform:scale(1.05)}.fx-btn:active{transform:scale(.95)}
+.fx-btn.voice-active{border-color:var(--accent);background:rgba(255,45,85,.1);box-shadow:0 0 12px rgba(255,45,85,.15)}
+.fx-icon{font-size:20px;margin-bottom:4px}.fx-name{font-size:10px;font-weight:600;color:var(--muted)}
+.req-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:6px}
+.sch-table{width:100%;border-collapse:collapse;font-size:12px}.sch-table th{text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-size:11px}
+.sch-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04)}.sch-table tr.current-row{background:rgba(255,45,85,.08)}.sch-table tr.current-row td{color:var(--accent);font-weight:600}
+.sch-inp{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--fg);padding:6px 8px;border-radius:6px;font-size:12px;outline:none;font-family:'Space Grotesk',sans-serif}.sch-inp:focus{border-color:var(--accent)}
+.stat-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.stat-val{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--accent)}.stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#ff1744;animation:pd 1s ease-in-out infinite;display:inline-block;vertical-align:middle}
+.theme-pop{position:absolute;top:100%;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5);gap:8px}
+.theme-pop.open{display:flex}.theme-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15px}
+.theme-dot:hover{transform:scale(1.2)}.theme-dot.act{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.3)}
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(255,45,85,.04)}
+.np-marquee{overflow:hidden;white-space:nowrap}.np-marquee span{display:inline-block;animation:mq 12s linear infinite}@keyframes mq{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+/* GLM DJ Sohbet Balonu Stilleri */
+.mr.ai-msg .mn{color:#4d96ff !important; display:flex; align-items:center; gap:4px;}
+.mr.ai-msg .mt{display:block; margin-top:4px; background:rgba(77,150,255,.08); border-left:2px solid #4d96ff; padding:6px 10px; border-radius:0 8px 8px 8px; color:#e0e7ff;}
+@media(max-width:860px){.chat-p{position:fixed;right:-320px;top:0;bottom:0;z-index:100;transition:right .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.5);height:100vh}.chat-p.open{right:0}.cbtn{display:flex}}
+@media(max-width:600px){.vm{width:160px!important;height:160px!important}.vlm{width:50px!important;height:50px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:100px!important}.cg{flex-direction:column!important}}
+@media(prefers-reduced-motion:reduce){.vinyl.spin,.login-bg,.float-orb,.on-air-dot.active,.rec-dot{animation:none!important}.mr{animation:none!important}*{transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="bg-atm">
+<div id="toast" class="toast-el" role="alert" aria-live="polite"></div>
+<div id="cov" class="cov"></div>
+
+<!-- LOGIN SCREEN -->
+<section id="login" class="fixed inset-0 flex items-center justify-center z-50 px-4">
+<div class="vinyl login-bg" aria-hidden="true"><div class="vinyl-lbl" style="width:120px;height:120px;font-size:11px">RADIO<br>STUDIO</div><div class="vinyl-hole" style="width:16px;height:16px"></div></div>
+<div class="float-orb" style="width:6px;height:6px;background:var(--accent);opacity:.2;top:18%;left:12%" aria-hidden="true"></div>
+<div class="float-orb" style="width:4px;height:4px;background:var(--warm);opacity:.15;top:72%;left:22%;animation-delay:-3s" aria-hidden="true"></div>
+<div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
+<h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
+<p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v3 (AI)</p>
+<div class="space-y-3 mb-6">
+    <input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30">
+    <input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20">
+</div>
+<div id="modeCards" class="grid grid-cols-2 gap-3 mb-6">
+    <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
+    <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
+</div>
+<input id="iPin" class="inp hidden" type="password" placeholder="Yayıncı PIN" maxlength="10">
+<button id="btnGo" class="btn w-full" disabled>YAYINA BASLA</button>
+</div></section>
+
+<!-- APP MAIN -->
+<div id="app" class="hidden flex flex-col h-screen">
+<header id="hdr" class="flex items-center justify-between px-5 py-3 border-b" style="border-color:var(--border);background:var(--surface);min-height:54px">
+<div class="flex items-center gap-3"><div id="connDot" class="conn-dot wait"></div><span id="hdrName" class="font-display text-sm font-bold tracking-wider truncate max-w-[160px]"></span><span id="hdrRole" class="badge hidden"></span></div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2"><div id="oaDot" class="on-air-dot"></div><span id="oaText" class="text-xs font-semibold tracking-wide" style="color:var(--muted)">OFFLINE</span></div>
+<span id="hdrLis" class="badge"><i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>0</span>
+<div style="position:relative"><button id="btnTheme" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px"><i class="fas fa-palette"></i></button>
+<div id="themePop" class="theme-pop"><div class="theme-dot act" data-t="kirmizi" style="background:#ff2d55"></div><div class="theme-dot" data-t="mavi" style="background:#4d96ff"></div><div class="theme-dot" data-t="yesil" style="background:#00e676"></div><div class="theme-dot" data-t="mor" style="background:#cc5de8"></div><div class="theme-dot" data-t="turuncu" style="background:#ff9500"></div></div></div>
+<button id="btnChatTog" class="cbtn items-center justify-center w-9 h-9 rounded-lg border text-sm" style="border-color:var(--border);color:var(--muted);background:var(--card)"><i class="fas fa-comments"></i></button>
+</div></header>
+
+<div class="flex flex-1 overflow-hidden">
+<main class="flex-1 flex flex-col overflow-y-auto p-4 md:p-6">
+
+<!-- BROADCASTER VIEW -->
+<div id="vBc" class="hidden flex-1 flex flex-col items-center gap-4">
+<div class="flex items-center gap-5 md:gap-8">
+<div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL" style="height:0%"></div><div class="vu-peak" id="vuPL" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
+<div class="vinyl vm spin" id="vinBc" style="width:220px;height:220px"><div class="vinyl-lbl vlm" style="width:68px;height:68px;font-size:8px">LIVE</div><div class="vinyl-hole vhm" style="width:8px;height:8px"></div></div>
+<div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFR" style="height:0%"></div><div class="vu-peak" id="vuPR" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">R</span></div>
+</div>
+<div class="w-full max-w-xl" style="height:70px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border);overflow:hidden"><canvas id="cvBc" style="width:100%;height:100%;display:block"></canvas></div>
+<div class="w-full max-w-xl space-y-3">
+<div class="flex flex-wrap gap-2 cg" style="display:flex;align-items:center">
+<button id="btnBc" class="btn btn-sm" style="white-space:nowrap">YAYINI BASLAT</button>
+<button id="btnMic" class="btn btn-sm btn-ghost" disabled style="white-space:nowrap"><i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI</button>
+<select id="selMic" class="inp" style="max-width:200px;flex:1;min-width:140px"><option>Mikrofon seciliyor...</option></select>
+<input id="iSong" class="inp flex-1" placeholder="Su an calan parca..." style="min-width:140px" disabled>
+<div class="flex items-center gap-1" style="min-width:100px"><i class="fas fa-microphone text-xs" style="color:var(--muted)"></i><input id="rngGain" type="range" min="0" max="200" value="100"><span id="lblGain" class="text-xs font-mono" style="color:var(--muted);min-width:28px">100%</span></div>
+</div>
+<div class="flex items-center gap-3 text-xs" style="color:var(--muted)"><span><i class="fas fa-clock mr-1"></i><span id="tmBc">00:00:00</span></span><span id="recInd" class="hidden"><span class="rec-dot" style="margin-right:4px"></span>KAYIT</span></div>
+</div>
+
+<div class="w-full max-w-xl">
+<div class="tab-bar">
+<button class="tab-btn act" data-tab="dj">Auto DJ</button>
+<button class="tab-btn" data-tab="fx">Efektler</button>
+<button class="tab-btn" data-tab="req">Istekler <span id="reqBadge" class="hidden" style="background:var(--accent);color:#fff;border-radius:8px;padding:0 6px;font-size:10px;margin-left:4px">0</span></button>
+<button class="tab-btn" data-tab="sch">Program</button>
+<button class="tab-btn" data-tab="stat">Istatistik</button>
+</div>
+
+<div id="tab-dj" class="tab-content act mt-3">
+<div id="dropZone" class="drop-zone mb-3"><i class="fas fa-cloud-upload-alt text-2xl mb-2" style="color:var(--muted)"></i><div class="text-sm" style="color:var(--muted)">Muzik dosyalarini surukleyin veya tiklayin</div><input id="fileInp" type="file" accept="audio/*" multiple style="display:none"></div>
+<div id="plList" class="space-y-1 max-h-48 overflow-y-auto" style="scrollbar-width:thin;scrollbar-color:#2a2a3a transparent"></div>
+<div id="plEmpty" class="text-center py-6 text-xs" style="color:var(--muted)">Playlist bos</div>
+<div class="flex items-center gap-3 mt-3">
+<button id="plPrev" class="btn btn-sm btn-ghost" disabled><i class="fas fa-step-backward"></i></button>
+<button id="plPlay" class="btn btn-sm" disabled><i class="fas fa-play"></i></button>
+<button id="plNext" class="btn btn-sm btn-ghost" disabled><i class="fas fa-step-forward"></i></button>
+<div class="flex-1 flex items-center gap-2"><span class="text-xs" style="color:var(--muted)">Muzik</span><input id="rngDjVol" type="range" min="0" max="100" value="80"><span id="lblDjVol" class="text-xs font-mono" style="color:var(--muted);min-width:28px">80%</span></div>
+</div><div id="djNow" class="mt-2 text-xs truncate" style="color:var(--muted)"></div>
+</div>
+
+<div id="tab-fx" class="tab-content mt-3">
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-music mr-1"></i>JINGLELER</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
+<div class="fx-btn" data-fx="jingle-short"><div class="fx-icon" style="color:#ff2d55"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Kisa</div></div>
+<div class="fx-btn" data-fx="jingle-mid"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Orta</div></div>
+<div class="fx-btn" data-fx="jingle-long"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Uzun</div></div>
+</div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-volume-up mr-1"></i>SES EFEKTLERI</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
+<div class="fx-btn" data-fx="laugh"><div class="fx-icon" style="color:#ff9500"><i class="fas fa-face-laugh"></i></div><div class="fx-name">Kahkaha</div></div>
+<div class="fx-btn" data-fx="clap"><div class="fx-icon" style="color:#00e676"><i class="fas fa-hand"></i></div><div class="fx-name">Alkis</div></div>
+<div class="fx-btn" data-fx="horn"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-bullhorn"></i></div><div class="fx-name">Horn</div></div>
+<div class="fx-btn" data-fx="cheer"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-users"></i></div><div class="fx-name">Tezahurat</div></div>
+</div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-leaf mr-1"></i>DOGA SESLERI</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
+<div class="fx-btn" data-fx="rain"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-cloud-rain"></i></div><div class="fx-name">Yagmur</div></div>
+<div class="fx-btn" data-fx="thunder"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-bolt"></i></div><div class="fx-name">Gokgurultusu</div></div>
+<div class="fx-btn" data-fx="birds"><div class="fx-icon" style="color:#00e676"><i class="fas fa-dove"></i></div><div class="fx-name">Kuslar</div></div>
+<div class="fx-btn" data-fx="ocean"><div class="fx-icon" style="color:#00b4d8"><i class="fas fa-water"></i></div><div class="fx-name">Okyanus</div></div>
+</div>
+<div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-sliders-h mr-1"></i>SES EFEK AYARI</div>
+<div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
+<div class="fx-btn voice-fx voice-active" data-voice="normal"><div class="fx-icon" style="color:var(--fg)"><i class="fas fa-microphone"></i></div><div class="fx-name">Normal</div></div>
+<div class="fx-btn voice-fx" data-voice="telefon"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-phone"></i></div><div class="fx-name">Telefon</div></div>
+<div class="fx-btn voice-fx" data-voice="radyo"><div class="fx-icon" style="color:#ff9500"><i class="fas fa-broadcast-tower"></i></div><div class="fx-name">Radyo</div></div>
+<div class="fx-btn voice-fx" data-voice="robot"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-robot"></i></div><div class="fx-name">Robot</div></div>
+<div class="fx-btn voice-fx" data-voice="yanki"><div class="fx-icon" style="color:#00e676"><i class="fas fa-mountain"></i></div><div class="fx-name">Yanki</div></div>
+<div class="fx-btn voice-fx" data-voice="derin"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-drum"></i></div><div class="fx-name">Derin</div></div>
+</div>
+<div class="p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)"><div class="text-xs font-semibold mb-2" style="color:var(--muted)">KAYIT</div><div class="flex items-center gap-2"><button id="btnRec" class="btn btn-sm btn-red" disabled><i class="fas fa-circle mr-1"></i>KAYIT BASLAT</button><button id="btnRecDl" class="btn btn-sm btn-ghost hidden"><i class="fas fa-download mr-1"></i>INDIR</button></div></div>
+<div class="mt-3 p-3 rounded-lg" style="background:rgba(0,0,0,.2);border:1px solid var(--border)"><div class="text-xs font-semibold mb-2" style="color:var(--muted)">REKLAM ARASI</div><div class="flex items-center gap-2"><input id="iAdTime" class="inp" type="number" value="30" min="5" max="600" style="width:70px;padding:6px 8px;font-size:12px"><span class="text-xs" style="color:var(--muted)">sn</span><button id="btnAd" class="btn btn-sm btn-ghost" disabled><i class="fas fa-play mr-1"></i>BASLAT</button><span id="adCount" class="text-xs font-mono" style="color:var(--warm)">00:00</span></div></div>
+</div>
+
+<div id="tab-req" class="tab-content mt-3"><div id="reqList" class="space-y-1"></div><div id="reqEmpty" class="text-center py-6 text-xs" style="color:var(--muted)">Bekleyen istek yok</div></div>
+
+<div id="tab-sch" class="tab-content mt-3">
+<div class="flex items-center justify-between mb-2"><span class="text-xs font-semibold" style="color:var(--muted)">GUNLUK PROGRAM</span><button id="btnSchAdd" class="btn btn-sm btn-ghost"><i class="fas fa-plus mr-1"></i>Ekle</button></div>
+<div class="overflow-x-auto rounded-lg" style="border:1px solid var(--border)"><table class="sch-table"><thead><tr><th>Saat</th><th>Program</th><th></th></tr></thead><tbody id="schBody"></tbody></table></div>
+<button id="btnSchSave" class="btn btn-sm btn-green mt-2"><i class="fas fa-save mr-1"></i>KAYDET VE YAYINLA</button>
+</div>
+
+<div id="tab-stat" class="tab-content mt-3">
+<div class="grid grid-cols-2 gap-3">
+<div class="stat-card"><div class="stat-val" id="stCur">0</div><div class="stat-lbl">Su An</div></div>
+<div class="stat-card"><div class="stat-val" id="stPeak">0</div><div class="stat-lbl">En Yuksek</div></div>
+<div class="stat-card"><div class="stat-val" id="stTotal">0</div><div class="stat-lbl">Toplam</div></div>
+<div class="stat-card"><div class="stat-val" id="stDur">00:00</div><div class="stat-lbl">Sure</div></div>
+</div></div>
+</div></div>
+
+<!-- LISTENER VIEW -->
+<div id="vLs" class="hidden flex-1 flex flex-col items-center gap-4">
+<div class="flex items-center gap-5 md:gap-8">
+<div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL2" style="height:0%"></div><div class="vu-peak" id="vuPL2" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
+<div class="vinyl vm" id="vinLs" style="width:220px;height:220px"><div class="vinyl-lbl vlm" style="width:68px;height:68px;font-size:8px">RADIO</div><div class="vinyl-hole vhm" style="width:8px;height:8px"></div></div>
+<div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFR2" style="height:0%"></div><div class="vu-peak" id="vuPR2" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">R</span></div>
+</div>
+<div class="w-full max-w-xl" style="height:70px;background:rgba(0,0,0,.3);border-radius:10px;border:1px solid var(--border);overflow:hidden"><canvas id="cvLs" style="width:100%;height:100%;display:block"></canvas></div>
+<div class="w-full max-w-xl rounded-xl p-4" style="background:rgba(255,255,255,.02);border:1px solid var(--border)"><div class="flex items-center gap-3 mb-2"><i class="fas fa-music text-sm" style="color:var(--accent)"></i><span class="text-xs font-semibold tracking-wide" style="color:var(--muted)">SU AN CALAN</span></div><div class="np-marquee"><span id="npText" class="text-lg font-semibold">Yayin bekleniyor...</span></div></div>
+<div class="w-full max-w-xl flex flex-wrap items-center gap-3 cg" style="display:flex">
+<button id="btnLs" class="btn btn-sm" disabled style="white-space:nowrap"><i class="fas fa-play mr-2"></i>DINLE</button>
+<div class="flex items-center gap-2 flex-1" style="min-width:120px"><i class="fas fa-volume-up text-xs" style="color:var(--muted)"></i><input id="rngVol" type="range" min="0" max="100" value="75"></div>
+<span class="text-xs" style="color:var(--muted)"><i class="fas fa-clock mr-1"></i><span id="tmLs">00:00:00</span></span>
+</div>
+<div class="w-full max-w-xl">
+<div class="tab-bar"><button class="tab-btn act" data-tab-ls="lsreq">Istek Gonder</button><button class="tab-btn" data-tab-ls="lssch">Program</button></div>
+<div id="tab-lsreq" class="tab-content act mt-3">
+<div class="flex gap-2"><input id="iReqSong" class="inp flex-1" placeholder="Parca adi yazin..." maxlength="100"><button id="btnReqSend" class="btn btn-sm" disabled><i class="fas fa-paper-plane mr-1"></i>GONDER</button></div>
+<div id="reqSentMsg" class="text-xs mt-2 hidden" style="color:#00e676"><i class="fas fa-check mr-1"></i>Istek gonderildi!</div>
+<div id="reqAccMsg" class="text-xs mt-2 hidden" style="color:var(--warm)"><i class="fas fa-star mr-1"></i>Kabul edildi: <span id="reqAccSong"></span></div>
+</div>
+<div id="tab-lssch" class="tab-content mt-3"><div class="overflow-x-auto rounded-lg" style="border:1px solid var(--border)"><table class="sch-table"><thead><tr><th>Saat</th><th>Program</th></tr></thead><tbody id="schBodyLs"></tbody></table></div></div>
+</div></div>
+</main>
+
+<aside id="chatP" class="chat-p">
+<div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)"><h2 class="font-display text-xs font-bold tracking-widest">SOHBET</h2><div class="flex items-center gap-2"><span id="chatOn" class="badge">0</span><button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer"><i class="fas fa-times"></i></button></div></div>
+<div id="chatMsgs" class="chat-msgs" role="log" aria-live="polite"></div>
+<div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesaj yazin... (Yapay zeka icin: !ai merhaba)" maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
+</aside></div>
+
+<footer class="flex items-center justify-between px-5 py-2 border-t text-xs" style="border-color:var(--border);background:var(--surface);color:var(--muted);min-height:38px"><span id="fStatus">Hazir</span><span id="fConn">Baglaniyor...</span></footer>
+</div>
+
+<script>
+var S={mode:null,station:'',nick:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
+var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,bcSrc=null,bcMic=null,bcSendNode=null,bcSilent=null,bcStreamDest=null,bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
+var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceModGain=null,voiceEffect='normal';
+var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0;
+var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
+var ws=null,wsReconn=null;
+
+function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsPlayNode)lsPlayNode.port.postMessage(new Float32Array(e.data));}};}
+function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
+function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0,pin:$('iPin')?$('iPin').value.trim():''});}
+function setConn(s){$('connDot').className='conn-dot '+s;}
+var $=function(id){return document.getElementById(id);};
+var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
+function nCol(n){var h=0;for(var i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return nColors[Math.abs(h)%nColors.length];}
+function fmtT(s){return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function fmtM(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
+var _tt;function toast(m){var e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){e.classList.remove('show');},2800);}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',warm:'#00b4d8'},yesil:{accent:'#00e676',warm:'#76ff03'},mor:{accent:'#cc5de8',warm:'#e040fb'},turuncu:{accent:'#ff9500',warm:'#ff6d00'}};
+function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style.setProperty('--accent',t.accent);document.documentElement.style.setProperty('--warm',t.warm);document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});try{localStorage.setItem('radio-theme',n);}catch(e){}}
+function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
+
+function initLogin(){
+    var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo'),pinInp=$('iPin');
+    var check=function(){
+        var isValid = $('iStation').value.trim() && $('iNick').value.trim() && S.mode;
+        if(S.mode === 'broadcaster') isValid = isValid && pinInp.value.trim();
+        btn.disabled = !isValid;
+    };
+    cards.forEach(function(c){
+        var go=function(){
+            cards.forEach(function(x){x.classList.remove('sel');});
+            c.classList.add('sel');S.mode=c.dataset.m;check();
+            if(S.mode === 'broadcaster') pinInp.classList.remove('hidden');
+            else pinInp.classList.add('hidden');
+        };
+        c.addEventListener('click',go);
+        c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
+    });
+     $('iStation').addEventListener('input',check);
+     $('iNick').addEventListener('input',check);
+     pinInp.addEventListener('input',check); 
+
+    btn.addEventListener('click',function(){
+        if(btn.disabled)return;S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
+         $('login').classList.add('hidden');$('app').classList.remove('hidden');
+         $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
+        if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
+         $('fStatus').textContent=S.nick+' olarak giris yaptiniz';if(ws&&ws.readyState===1)doJoin();
+    });
+}
+
+function handleMsg(m){
+switch(m.type){
+case'joined':if(m.role==='broadcaster'){$('fStatus').textContent='Yayinci olarak baglandiniz';}else{$('fStatus').textContent='Dinleyici olarak baglandiniz';if(m.active){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');}updCount(m.count||0);if(m.schedule)renderSch(m.schedule,false);}break;
+case'broadcast-start':if(S.mode==='listener'){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');addSys(m.nick+' yayini baslatti');if(m.schedule)renderSch(m.schedule,false);}break;
+case'broadcast-stop':if(S.mode==='listener'){showBcStopped();addSys('Yayin sona erdi');}break;
+case'song-update':if(S.mode==='listener')$('npText').textContent=m.song||'Yayin bekleniyor...';break;
+case'chat':if(m.nick!==S.nick)addChat(m);break;
+case'listener-update':updCount(m.count||0);if(m.stats){S.peak=m.stats.peak||0;S.totalJoined=m.stats.totalJoined||0;updStats();}break;
+case'system':addSys(m.text);break;
+case'new-request':renderReqs(m.queue);break;
+case'queue-update':renderReqs(m.queue);break;
+case'request-sent':$('reqSentMsg').classList.remove('hidden');setTimeout(function(){$('reqSentMsg').classList.add('hidden');},3000);break;
+case'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong').textContent=m.song;setTimeout(function(){$('reqAccMsg').classList.add('hidden');},5000);break;
+case'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
+case'schedule-update':if(S.mode==='listener')renderSch(m.schedule,false);break;
+case'error':toast(m.message);$('login').classList.remove('hidden');$('app').classList.add('hidden');break;
+}}
+function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
+function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
+function updCount(n){S.listenerCount=n;$('hdrLis').innerHTML='<i class="fas fa-users" style="font-size:10px;margin-right:4px"></i>'+n;$('chatOn').textContent=n;}
+function updStats(){$('stCur').textContent=S.listenerCount;$('stPeak').textContent=S.peak;$('stTotal').textContent=S.totalJoined;if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);}
+function initTabs(){
+document.querySelectorAll('[data-tab]').forEach(function(b){b.addEventListener('click',function(){var t=b.dataset.tab;b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});b.classList.add('act');b.parentElement.parentElement.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});$('tab-'+t).classList.add('act');});});
+document.querySelectorAll('[data-tab-ls]').forEach(function(b){b.addEventListener('click',function(){var t=b.dataset.tabLs;b.parentElement.querySelectorAll('.tab-btn').forEach(function(x){x.classList.remove('act');});b.classList.add('act');b.parentElement.parentElement.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('act');});$('tab-'+t).classList.add('act');});});}
+function setupBc(){
+var sel=$('selMic');
+navigator.mediaDevices.getUserMedia({audio:true}).then(function(tmp){tmp.getTracks().forEach(function(t){t.stop();});return navigator.mediaDevices.enumerateDevices();}).then(function(devs){
+sel.innerHTML='';var found=false;devs.filter(function(d){return d.kind==='audioinput';}).forEach(function(d,i){var o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Mikrofon '+(i+1));sel.appendChild(o);found=true;});if(!found)sel.innerHTML='<option>Mikrofon bulunamadi</option>';
+}).catch(function(){sel.innerHTML='<option value="">Mikrofon erisimi gerekli</option>';toast('Mikrofon izni verin ve sayfayi yenileyin');});
+ $('btnBc').addEventListener('click',toggleBc);
+ $('btnMic').addEventListener('click',toggleMic);
+ $('rngGain').addEventListener('input',function(e){var v=parseInt(e.target.value);$('lblGain').textContent=v+'%';if(bcGain&&S.micOn)bcGain.gain.value=v/100;});
+var dz=$('dropZone'),fi=$('fileInp');
+dz.addEventListener('click',function(){fi.click();});dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag');addFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){addFiles(fi.files);fi.value='';});
+ $('plPrev').addEventListener('click',function(){playPl(djCurIdx-1);});$('plPlay').addEventListener('click',toggleDj);$('plNext').addEventListener('click',function(){playPl(djCurIdx+1);});
+ $('rngDjVol').addEventListener('input',function(e){$('lblDjVol').textContent=e.target.value+'%';if(bcDjGain)bcDjGain.gain.value=(S.micOn?0.15:1)*parseInt(e.target.value)/100;});
+document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(){playFx(b.dataset.fx);});});
+document.querySelectorAll('.voice-fx').forEach(function(b){b.addEventListener('click',function(){setVoiceEffect(b.dataset.voice);});});
+ $('btnRec').addEventListener('click',toggleRec);$('btnRecDl').addEventListener('click',dlRec);
+ $('btnAd').addEventListener('click',toggleAd);
+ $('btnSchAdd').addEventListener('click',addSchRow);$('btnSchSave').addEventListener('click',saveSch);
+resizeCv($('cvBc'));}
+
+function toggleBc(){
+if(S.broadcasting){stopBc();return;}
+var devId=$('selMic').value;var cons=(devId&&devId!=='')?{audio:{deviceId:{exact:devId}}}:{audio:true};
+navigator.mediaDevices.getUserMedia(cons).then(function(stream){
+bcMic=stream;bcAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+bcAnalyser=bcAudioCtx.createAnalyser();bcAnalyser.fftSize=128;bcAnalyser.smoothingTimeConstant=0.8;
+bcGain=bcAudioCtx.createGain();bcGain.gain.value=0;
+bcSrc=bcAudioCtx.createMediaStreamSource(bcMic);bcSrc.connect(bcGain);
+bcMixGain=bcAudioCtx.createGain();bcMixGain.gain.value=1;
+voiceFilter=bcAudioCtx.createBiquadFilter();voiceFilter.type='allpass';
+voiceDelay=bcAudioCtx.createDelay(1.0);voiceDelay.delayTime.value=0;
+voiceDelayFb=bcAudioCtx.createGain();voiceDelayFb.gain.value=0;
+voiceModOsc=bcAudioCtx.createOscillator();voiceModOsc.type='sine';voiceModOsc.frequency.value=150;voiceModOsc.start();
+voiceModGain=bcAudioCtx.createGain();voiceModGain.gain.value=1.0;
+bcGain.connect(voiceFilter);voiceFilter.connect(voiceDelay);
+voiceDelay.connect(voiceDelayFb);voiceDelayFb.connect(voiceDelay);
+voiceDelay.connect(voiceModGain);voiceModGain.connect(bcMixGain);bcMixGain.connect(bcAnalyser);
+bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;bcDjGain.connect(bcMixGain);
+djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
+djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
+bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
+
+// AudioWorklet Entegrasyonu
+bcAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(function(){
+    bcSendNode=new AudioWorkletNode(bcAudioCtx,'recorder-worklet',{numberOfInputs:1,numberOfOutputs:0});
+    bcSendNode.port.onmessage=function(e){if(ws&&ws.readyState===1)ws.send(e.data.buffer);};
+    bcMixGain.connect(bcSendNode);
+    bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendNode.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
+    bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
+
+    S.broadcasting=true;S.bcStart=Date.now();S.song=$('iSong').value.trim();
+    $('btnBc').textContent='YAYINI DURDUR';$('btnBc').classList.add('stop');$('btnMic').disabled=false;$('iSong').disabled=false;
+    $('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');$('fStatus').textContent='Yayin aktif';
+    $('btnRec').disabled=false;$('btnAd').disabled=false;
+    S.timerInt=setInterval(function(){$('tmBc').textContent=fmtT((Date.now()-S.bcStart)/1000);if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);},1000);
+    wsSend({type:'broadcast-start',song:S.song,sampleRate:bcAudioCtx.sampleRate,schedule:S.schedule});addSys('Yayin basladi!');vizBc();toast('Yayin baslatildi');
+}).catch(function(err){toast('AudioWorklet yuklenemedi!');console.error(err);});
+
+}).catch(function(e){if(e.name==='NotAllowedError')toast('Mikrofon izni verilmedi!');else if(e.name==='NotFoundError')toast('Mikrofon bulunamadi!');else toast('Hata: '+e.message);});}
+
+function stopBc(){
+S.broadcasting=false;S.micOn=false;clearInterval(S.timerInt);
+if(djAudio){djAudio.pause();djAudio.src='';}djPlaying=false;djCurIdx=-1;
+if(bcMic){bcMic.getTracks().forEach(function(t){t.stop();});bcMic=null;}
+if(voiceModOsc)try{voiceModOsc.stop();}catch(e){}
+[voiceFilter,voiceDelay,voiceDelayFb,voiceModGain].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});
+voiceFilter=voiceDelay=voiceDelayFb=voiceModOsc=voiceModGain=null;voiceEffect='normal';
+[bcSendNode,bcSilent,bcStreamDest].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});bcSendNode=null;bcSilent=null;bcStreamDest=null;
+if(bcRecorder&&S.recording)stopRecInt();
+if(bcAudioCtx)bcAudioCtx.close();bcAudioCtx=bcAnalyser=bcGain=bcMixGain=bcDjGain=bcDjSource=bcFxGain=null;
+if(bcRafId){cancelAnimationFrame(bcRafId);bcRafId=null;}
+ $('btnBc').textContent='YAYINI BASLAT';$('btnBc').classList.remove('stop');
+ $('btnMic').disabled=true;$('btnMic').innerHTML='<i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI';$('btnMic').classList.remove('stop');
+ $('iSong').disabled=true;$('btnRec').disabled=true;$('btnAd').disabled=true;
+ $('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('fStatus').textContent='Yayin durduruldu';
+ $('vuFL').style.height='0%';$('vuFR').style.height='0%';$('vuPL').style.bottom='0%';$('vuPR').style.bottom='0%';bcPeakL=bcPeakR=0;clearCv($('cvBc'));renderPl();
+wsSend({type:'broadcast-stop'});addSys('Yayin sona erdi');toast('Yayin durduruldu');}
+function toggleMic(){if(!S.broadcasting)return;S.micOn=!S.micOn;if(S.micOn){bcGain.gain.value=parseInt($('rngGain').value)/100;if(bcDjGain)bcDjGain.gain.value=0.15*parseInt($('rngDjVol').value)/100;$('btnMic').innerHTML='<i class="fas fa-microphone mr-1"></i>MIC ACIK';$('btnMic').classList.add('stop');}else{bcGain.gain.value=0;if(bcDjGain)bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;$('btnMic').innerHTML='<i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI';$('btnMic').classList.remove('stop');}}
+function addFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('audio/'))continue;var url=URL.createObjectURL(files[i]);var name=files[i].name.replace(/\.[^.]+$/,'');djPlaylist.push({name:name,url:url,duration:0});(function(idx){var a=new Audio();a.src=djPlaylist[idx].url;a.addEventListener('loadedmetadata',function(){djPlaylist[idx].duration=a.duration;renderPl();});})(djPlaylist.length-1);}renderPl();toast(djPlaylist.length+' parca eklendi');}
+function renderPl(){var c=$('plList'),e=$('plEmpty');if(!djPlaylist.length){c.innerHTML='';e.classList.remove('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=true;return;}e.classList.add('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=!S.broadcasting;var h='';for(var i=0;i<djPlaylist.length;i++){var p=djPlaylist[i],a=i===djCurIdx;h+='<div class="pl-item'+(a?' playing':'')+'" data-idx="'+i+'"><span class="pl-idx">'+(a?'<i class="fas fa-volume-up" style="color:var(--accent);font-size:10px"></i>':(i+1))+'</span><span class="pl-name">'+esc(p.name)+'</span><span class="pl-dur">'+(p.duration>0?fmtM(p.duration):'--:--')+'</span><span class="pl-del" data-del="'+i+'"><i class="fas fa-times"></i></span></div>';}c.innerHTML=h;c.querySelectorAll('.pl-item').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('.pl-del'))return;playPl(parseInt(el.dataset.idx));});});c.querySelectorAll('.pl-del').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var idx=parseInt(el.dataset.del);if(idx===djCurIdx){djAudio.pause();djPlaying=false;djCurIdx=-1;}else if(idx<djCurIdx)djCurIdx--;URL.revokeObjectURL(djPlaylist[idx].url);djPlaylist.splice(idx,1);renderPl();});});$('djNow').textContent=djCurIdx>=0&&djCurIdx<djPlaylist.length?'Calan: '+djPlaylist[djCurIdx].name:'';}
+function playPl(idx){if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length)return;djCurIdx=idx;djAudio.src=djPlaylist[idx].url;djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';renderPl();S.song=djPlaylist[idx].name;$('iSong').value=S.song;wsSend({type:'song-update',song:S.song});}
+function toggleDj(){if(!S.broadcasting)return;if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';wsSend({type:'song-update',song:''});}else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';S.song=djPlaylist[djCurIdx].name;wsSend({type:'song-update',song:S.song});}else if(djPlaylist.length)playPl(0);}
+function setVoiceEffect(fx){voiceEffect=fx;voiceFilter.type='allpass';voiceDelay.delayTime.value=0;voiceDelayFb.gain.value=0;try{voiceModOsc.disconnect();}catch(e){}voiceModGain.gain.value=1.0;switch(fx){case'normal':break;case'telefon':voiceFilter.type='highpass';voiceFilter.frequency.value=1200;voiceFilter.Q.value=1;break;case'radyo':voiceFilter.type='lowpass';voiceFilter.frequency.value=2500;voiceFilter.Q.value=5;break;case'robot':voiceModOsc.connect(voiceModGain.gain);voiceModOsc.frequency.value=150;break;case'yanki':voiceDelay.delayTime.value=.25;voiceDelayFb.gain.value=.4;break;case'derin':voiceFilter.type='lowpass';voiceFilter.frequency.value=800;voiceFilter.Q.value=2;break;}document.querySelectorAll('.voice-fx').forEach(function(b){b.classList.toggle('voice-active',b.dataset.voice===fx);});toast('Ses efekti: '+fx);}
+function mkNoise(dur){var sr=bcAudioCtx.sampleRate,len=Math.floor(sr*dur),buf=bcAudioCtx.createBuffer(1,len,sr),d=buf.getChannelData(0);for(var i=0;i<len;i++)d[i]=Math.random()*2-1;return buf;}
+function playFx(type){if(!bcAudioCtx||!bcFxGain)return;var t=bcAudioCtx.currentTime;
+if(type==='jingle-short')mkOsc(t,[523.25,659.25,783.99],[0,.15,.3],[.35,.35,.5],.6);
+else if(type==='jingle-mid')mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.2,.4,.6],[.3,.3,.3,.5],1);
+else if(type==='jingle-long'){mkOsc(t,[261.63,329.63,392,466.16,523.25,659.25],[0,.4,.8,1.2,1.6,2],[.3,.3,.3,.3,.3,.5],1.5);var bs=bcAudioCtx.createOscillator();bs.type='sine';bs.frequency.value=130.81;var bg=bcAudioCtx.createGain();bg.gain.setValueAtTime(.2,t);bg.gain.exponentialRampToValueAtTime(.001,t+3.5);bs.connect(bg);bg.connect(bcFxGain);bs.start(t);bs.stop(t+3.5);}
+else if(type==='laugh'){for(var i=0;i<6;i++){var st=t+i*.2,src=bcAudioCtx.createBufferSource();src.buffer=mkNoise(.12);var bp=bcAudioCtx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1500+Math.random()*500;bp.Q.value=2;var g=bcAudioCtx.createGain();g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.25,st+.02);g.gain.exponentialRampToValueAtTime(.001,st+.1);src.connect(bp);bp.connect(g);g.connect(bcFxGain);src.start(st);src.stop(st+.12);}}
+else if(type==='clap'){for(var j=0;j<8;j++){var ct=t+j*.08+Math.random()*.03,cs=bcAudioCtx.createBufferSource();cs.buffer=mkNoise(.05);var hp=bcAudioCtx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1000;var cg=bcAudioCtx.createGain();cg.gain.setValueAtTime(0,ct);cg.gain.linearRampToValueAtTime(.3,ct+.005);cg.gain.exponentialRampToValueAtTime(.001,ct+.04);cs.connect(hp);hp.connect(cg);cg.connect(bcFxGain);cs.start(ct);cs.stop(ct+.05);}}
+else if(type==='horn'){var hd=1.5,h1=bcAudioCtx.createOscillator();h1.type='square';h1.frequency.value=350;var h2=bcAudioCtx.createOscillator();h2.type='square';h2.frequency.value=440;var hg=bcAudioCtx.createGain();hg.gain.setValueAtTime(0,t);hg.gain.linearRampToValueAtTime(.2,t+.05);hg.gain.setValueAtTime(.2,t+hd-.1);hg.gain.linearRampToValueAtTime(0,t+hd);h1.connect(hg);h2.connect(hg);hg.connect(bcFxGain);h1.start(t);h1.stop(t+hd);h2.start(t);h2.stop(t+hd);}
+else if(type==='cheer'){var cd=3,csrc=bcAudioCtx.createBufferSource();csrc.buffer=mkNoise(cd);var cbp=bcAudioCtx.createBiquadFilter();cbp.type='bandpass';cbp.frequency.value=2000;cbp.Q.value=.5;var clfo=bcAudioCtx.createOscillator();clfo.frequency.value=8;var clg=bcAudioCtx.createGain();clg.gain.value=.08;clfo.connect(clg);var cgg=bcAudioCtx.createGain();cgg.gain.setValueAtTime(0,t);cgg.gain.linearRampToValueAtTime(.2,t+.3);cgg.gain.setValueAtTime(.2,t+cd-.3);cgg.gain.linearRampToValueAtTime(0,t+cd);clg.connect(cgg.gain);clfo.start(t);clfo.stop(t+cd);csrc.connect(cbp);cbp.connect(cgg);cgg.connect(bcFxGain);csrc.start(t);csrc.stop(t+cd);}
+else if(type==='rain'){var rd=4,rs=bcAudioCtx.createBufferSource();rs.buffer=mkNoise(rd);var rbp=bcAudioCtx.createBiquadFilter();rbp.type='bandpass';rbp.frequency.value=3000;rbp.Q.value=.5;var rg=bcAudioCtx.createGain();rg.gain.setValueAtTime(0,t);rg.gain.linearRampToValueAtTime(.15,t+.3);rg.gain.setValueAtTime(.15,t+rd-.3);rg.gain.linearRampToValueAtTime(0,t+rd);rs.connect(rbp);rbp.connect(rg);rg.connect(bcFxGain);rs.start(t);rs.stop(t+rd);}
+else if(type==='thunder'){var td=3,ts=bcAudioCtx.createBufferSource();ts.buffer=mkNoise(td);var tlp=bcAudioCtx.createBiquadFilter();tlp.type='lowpass';tlp.frequency.value=200;var tg=bcAudioCtx.createGain();tg.gain.setValueAtTime(0,t);tg.gain.linearRampToValueAtTime(.5,t+.05);tg.gain.exponentialRampToValueAtTime(.1,t+.5);tg.gain.exponentialRampToValueAtTime(.001,t+td);ts.connect(tlp);tlp.connect(tg);tg.connect(bcFxGain);ts.start(t);ts.stop(t+td);}
+else if(type==='birds'){var bn=8+Math.floor(Math.random()*5);for(var k=0;k<bn;k++){var bt=t+Math.random()*3.5,bf=2000+Math.random()*3000,bd=.05+Math.random()*.15,bo=bcAudioCtx.createOscillator();bo.type='sine';bo.frequency.setValueAtTime(bf,bt);bo.frequency.linearRampToValueAtTime(bf*(.8+Math.random()*.4),bt+bd);var bg2=bcAudioCtx.createGain();bg2.gain.setValueAtTime(0,bt);bg2.gain.linearRampToValueAtTime(.12,bt+.01);bg2.gain.exponentialRampToValueAtTime(.001,bt+bd);bo.connect(bg2);bg2.connect(bcFxGain);bo.start(bt);bo.stop(bt+bd+.05);}}
+else if(type==='ocean'){var od=4,os=bcAudioCtx.createBufferSource();os.buffer=mkNoise(od);var olp=bcAudioCtx.createBiquadFilter();olp.type='lowpass';olp.frequency.value=500;olp.Q.value=5;var olfo=bcAudioCtx.createOscillator();olfo.frequency.value=.3;var olg=bcAudioCtx.createGain();olg.gain.value=400;olfo.connect(olg);olg.connect(olp.frequency);var og=bcAudioCtx.createGain();og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.2,t+.5);og.gain.setValueAtTime(.2,t+od-.5);og.gain.linearRampToValueAtTime(0,t+od);olfo.start(t);olfo.stop(t+od);os.connect(olp);olp.connect(og);og.connect(bcFxGain);os.start(t);os.stop(t+od);}else if(type==='alarm'){mkOsc(t,[800,600,800,600],[0,.1,.2,.3],[.4,.4,.4,.4],.4);}}
+function mkOsc(t,freqs,dels,vols,dur){for(var i=0;i<freqs.length;i++){var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();o.type='sine';o.frequency.value=freqs[i];g.gain.setValueAtTime(0,t+dels[i]);g.gain.linearRampToValueAtTime(vols[i],t+dels[i]+.02);g.gain.exponentialRampToValueAtTime(.001,t+dels[i]+dur);o.connect(g);g.connect(bcFxGain);o.start(t+dels[i]);o.stop(t+dels[i]+dur+.05);}}
+function toggleRec(){if(!S.broadcasting||!bcStreamDest)return;if(!S.recording)startRec();else stopRecInt();}
+function startRec(){bcRecChunks=[];bcRecorder=new MediaRecorder(bcStreamDest.stream,{mimeType:'audio/webm'});bcRecorder.ondataavailable=function(e){if(e.data.size>0)bcRecChunks.push(e.data);};bcRecorder.onstop=function(){$('btnRecDl').classList.remove('hidden');};bcRecorder.start();S.recording=true;$('btnRec').innerHTML='<i class="fas fa-stop mr-1"></i>KAYIT DURDUR';$('btnRec').classList.remove('btn-red');$('btnRec').classList.add('stop');$('recInd').classList.remove('hidden');toast('Kayit basladi');}
+function stopRecInt(){if(bcRecorder&&bcRecorder.state!=='inactive')bcRecorder.stop();S.recording=false;$('btnRec').innerHTML='<i class="fas fa-circle mr-1"></i>KAYIT BASLAT';$('btnRec').classList.add('btn-red');$('btnRec').classList.remove('stop');$('recInd').classList.add('hidden');}
+function dlRec(){if(!bcRecChunks.length)return;var blob=new Blob(bcRecChunks,{type:'audio/webm'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='radyo-'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.webm';a.click();URL.revokeObjectURL(a.href);toast('Kayit indirildi');}
+function toggleAd(){if(S.adRunning){clearInterval(S.adInt);S.adRunning=false;S.adSeconds=0;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';return;}S.adSeconds=parseInt($('iAdTime').value)||30;S.adRunning=true;$('btnAd').innerHTML='<i class="fas fa-stop mr-1"></i>DURDUR';$('adCount').textContent=fmtM(S.adSeconds);S.adInt=setInterval(function(){S.adSeconds--;$('adCount').textContent=fmtM(Math.max(0,S.adSeconds));if(S.adSeconds<=0){clearInterval(S.adInt);S.adRunning=false;$('adCount').textContent='00:00';$('btnAd').innerHTML='<i class="fas fa-play mr-1"></i>BASLAT';playFx('jingle-short');toast('Reklam arasi bitti!');}},1000);playFx('alarm');toast('Reklam arasi basladi');}
+function renderReqs(queue){var c=$('reqList'),e=$('reqEmpty');if(!queue||!queue.length){c.innerHTML='';e.classList.remove('hidden');$('reqBadge').classList.add('hidden');return;}e.classList.add('hidden');$('reqBadge').classList.remove('hidden');$('reqBadge').textContent=queue.length;var h='';for(var i=0;i<queue.length;i++){var r=queue[i];h+='<div class="req-item"><div class="flex-1"><div class="text-sm font-semibold">'+esc(r.nick)+'</div><div class="text-xs" style="color:var(--muted)">'+esc(r.song)+'</div></div><button class="btn btn-sm btn-green" style="padding:4px 10px;font-size:10px" data-aid="'+r.id+'" data-song="'+esc(r.song)+'"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-red" style="padding:4px 10px;font-size:10px" data-rid="'+r.id+'"><i class="fas fa-times"></i></button><button class="btn btn-sm btn-ghost" style="padding:4px 8px;font-size:10px" data-bid="'+esc(r.nick)+'" title="At"><i class="fas fa-ban"></i></button></div>';}c.innerHTML=h;c.querySelectorAll('[data-aid]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'request-action',requestId:parseFloat(b.dataset.aid),accepted:true,song:b.dataset.song});});});c.querySelectorAll('[data-rid]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'request-action',requestId:parseFloat(b.dataset.rid),accepted:false});});});c.querySelectorAll('[data-bid]').forEach(function(b){b.addEventListener('click',function(){wsSend({type:'block-listener',nick:b.dataset.bid});toast(b.dataset.bid+' atildi');});});}
+function addSchRow(){var tr=document.createElement('tr');tr.innerHTML='<td><input class="sch-inp sch-time" type="time" value="12:00" style="width:90px"></td><td><input class="sch-inp sch-name" placeholder="Program adi" style="width:100%"></td><td><button class="btn btn-sm btn-ghost sch-del" style="padding:4px 8px"><i class="fas fa-times"></i></button></td>';$('schBody').appendChild(tr);tr.querySelector('.sch-del').addEventListener('click',function(){tr.remove();});}
+function saveSch(){var rows=$('schBody').querySelectorAll('tr'),sch=[];rows.forEach(function(tr){var time=tr.querySelector('.sch-time').value,name=tr.querySelector('.sch-name').value.trim();if(time&&name)sch.push({time:time,name:name});});S.schedule=sch;wsSend({type:'update-schedule',schedule:sch});toast('Program kaydedildi');}
+function renderSch(data,isBc){var tb=isBc?$('schBody'):$('schBodyLs');tb.innerHTML='';if(!data||!data.length){tb.innerHTML='<tr><td colspan="'+(isBc?3:2)+'" class="text-center py-4" style="color:var(--muted)">Program yok</td></tr>';return;}var now=new Date(),nowMin=now.getHours()*60+now.getMinutes();for(var i=0;i<data.length;i++){var p=data[i],pts=p.time.split(':'),min=parseInt(pts[0])*60+parseInt(pts[1]);var isCur=nowMin>=min&&(i===data.length-1||nowMin<parseInt(data[i+1].time.split(':')[0])*60+parseInt(data[i+1].time.split(':')[1]));var tr=document.createElement('tr');if(isCur)tr.className='current-row';tr.innerHTML='<td>'+p.time+'</td><td>'+esc(p.name)+'</td>'+(isBc?'<td></td>':'');tb.appendChild(tr);}}
+function setupLs(){$('btnLs').addEventListener('click',toggleLs);$('rngVol').addEventListener('input',function(){if(lsGain)lsGain.gain.value=parseInt($('rngVol').value)/100;});$('btnReqSend').addEventListener('click',sendReq);$('iReqSong').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendReq();}});resizeCv($('cvLs'));}
+function sendReq(){var t=$('iReqSong').value.trim();if(!t||!S.broadcastActive)return;wsSend({type:'request',song:t});$('iReqSong').value='';}
+
+// LISTENER AUDIO WORKLET
+function toggleLs(){
+    if(S.listening){stopListening();return;}
+    if(!S.broadcastActive)return;
+    lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});
+    lsAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(()=>{
+        lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;
+        lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;
+        lsPlayNode=new AudioWorkletNode(lsAudioCtx,'player-worklet',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[1]});
+        lsPlayNode.connect(lsGain);
+        lsGain.connect(lsAnalyser);
+        lsAnalyser.connect(lsAudioCtx.destination);
+        lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);
+        S.listening=true;S.lsStart=Date.now();
+        $('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');
+        S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);
+        vizLs();
+    }).catch(err=>{toast('Ses modulu yuklenemedi!');console.error(err);});
+}
+function stopListening(){S.listening=false;if(lsPlayNode)try{lsPlayNode.disconnect();}catch(e){}lsPlayNode=null;if(lsAudioCtx)lsAudioCtx.close();lsAudioCtx=lsAnalyser=lsGain=null;if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}clearInterval(S.timerInt);$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('vinLs').classList.remove('spin');$('tmLs').textContent='00:00:00';$('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));}
+
+function vizBc(){if(!S.broadcasting||!bcAnalyser)return;bcRafId=requestAnimationFrame(vizBc);bcAnalyser.getByteFrequencyData(bcFreqData);var len=bcFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=bcFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL','vuPL',Math.min(100,(sL/(len/2))*100*(.92+Math.random()*.16)),true);setVU('vuFR','vuPR',Math.min(100,(sR/(len/2))*100*(.92+Math.random()*.16)),false);drawBars($('cvBc'),bcFreqData);}
+function vizLs(){if(!S.listening||!lsAnalyser)return;lsRafId=requestAnimationFrame(vizLs);lsAnalyser.getByteFrequencyData(lsFreqData);var len=lsFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=lsFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL2','vuPL2',Math.min(100,(sL/(len/2))*100),true);setVU('vuFR2','vuPR2',Math.min(100,(sR/(len/2))*100),false);drawBars($('cvLs'),lsFreqData);}
+function setVU(fId,pId,v,isL){var f=$(fId),p=$(pId);if(!f||!p)return;var vv=Math.max(0,Math.min(100,v));f.style.height=vv+'%';var pk=isL?lsPeakL:lsPeakR;if(vv>pk)pk=vv;else pk=Math.max(0,pk-.6);if(isL)lsPeakL=pk;else lsPeakR=pk;p.style.bottom=pk+'%';}
+function drawBars(cv,data){if(!cv)return;var ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=cv.width/dpr,H=cv.height/dpr;ctx.clearRect(0,0,W,H);var cnt=data.length,gap=2,bw=Math.max(1,(W-gap*(cnt-1))/cnt);for(var i=0;i<cnt;i++){var val=data[i]/255,bh=Math.max(1,val*H*.85),x=i*(bw+gap),y=H-bh;var g=ctx.createLinearGradient(x,H,x,y);g.addColorStop(0,'#ff2d55');g.addColorStop(0.6,'#ff6b35');g.addColorStop(1,'#ff9500');ctx.fillStyle=g;var r=Math.min(bw/2,3);ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+bw-r,y);ctx.quadraticCurveTo(x+bw,y,x+bw,y+r);ctx.lineTo(x+bw,H);ctx.closePath();ctx.fill();var rg=ctx.createLinearGradient(x,H,x,H+bh*.25);rg.addColorStop(0,'rgba(255,45,85,0.18)');rg.addColorStop(1,'rgba(255,45,85,0)');ctx.fillStyle=rg;ctx.fillRect(x,H,bw,bh*.25);}}
+function clearCv(cv){if(!cv)return;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);}
+function resizeCv(cv){if(!cv||!cv.parentElement)return;var r=cv.parentElement.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cv.getContext('2d').scale(d,d);}
+function sendChat(){var inp=$('iChat'),t=inp.value.trim();if(!t)return;var m={type:'chat',nick:S.nick,text:t,time:Date.now()};wsSend(m);addChat(m);inp.value='';inp.focus();}
+function addChat(m){var c=$('chatMsgs'),r=document.createElement('div');r.className='mr';var col=nCol(m.nick),t=new Date(m.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}),me=m.nick===S.nick;var isAI=m.nick==='GLM-DJ';var aiIcon=isAI?'<i class="fas fa-robot" style="font-size:11px"></i>':'';if(isAI)r.classList.add('ai-msg');r.innerHTML='<span class="mn" style="color:'+(isAI?'#4d96ff':col)+'">'+aiIcon+esc(m.nick)+(me?' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>':'')+'</span><span class="mt">'+esc(m.text)+'</span><span class="mtime">'+t+'</span>';c.appendChild(r);c.scrollTop=c.scrollHeight;}
+function addSys(t){var c=$('chatMsgs'),r=document.createElement('div');r.className='msys';r.textContent=t;c.appendChild(r);c.scrollTop=c.scrollHeight;}
+function initChatMob(){$('btnChatTog').addEventListener('click',function(){$('chatP').classList.add('open');$('cov').classList.add('open');});$('btnChatX').addEventListener('click',closeCM);$('cov').addEventListener('click',closeCM);}
+function closeCM(){$('chatP').classList.remove('open');$('cov').classList.remove('open');}
+window.addEventListener('beforeunload',function(){if(S.broadcasting)wsSend({type:'broadcast-stop'});if(ws)ws.close();});
+window.addEventListener('resize',function(){if(S.mode==='broadcaster'&&!S.broadcasting)resizeCv($('cvBc'));if(S.mode==='listener')resizeCv($('cvLs'));});
+document.addEventListener('DOMContentLoaded',function(){
+wsConnect();initLogin();initTabs();initChatMob();initTheme();
+ $('btnChatS').addEventListener('click',sendChat);
+ $('iChat').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+ $('btnTheme').addEventListener('click',function(e){e.stopPropagation();$('themePop').classList.toggle('open');});
+document.addEventListener('click',function(){$('themePop').classList.remove('open');});
+document.querySelectorAll('.theme-dot').forEach(function(d){d.addEventListener('click',function(e){e.stopPropagation();setTheme(d.dataset.t);});});
+});
+</script>
+</body>
+</html>
