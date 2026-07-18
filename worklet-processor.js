@@ -1,9 +1,10 @@
 class RecorderProcessor extends AudioWorkletProcessor {
-  process(inputs) {
+  process(inputs, outputs) {
     const input = inputs[0];
-    if (input.length > 0) {
+    const output = outputs[0]; // Bazı tarayıcıların çökmemesi için output referansı alıyoruz
+    if (input && input.length > 0) {
       const channelData = input[0];
-      this.port.postMessage(channelData.slice(0));
+      if (channelData) this.port.postMessage(channelData.slice(0));
     }
     return true;
   }
@@ -20,7 +21,7 @@ class PlayerProcessor extends AudioWorkletProcessor {
   }
   process(inputs, outputs) {
     const output = outputs[0];
-    if (output.length > 0) {
+    if (output && output.length > 0) {
       const channelData = output[0];
       if (this.queue.length > 0) {
         const chunk = this.queue.shift();

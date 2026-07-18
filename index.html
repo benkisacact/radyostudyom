@@ -251,7 +251,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </div>
 
 <script>
-var S={mode:null,station:'',nick:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
+var S={mode:null,station:'',nick:'',pin:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
 var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,bcSrc=null,bcMic=null,bcSendNode=null,bcSilent=null,bcStreamDest=null,bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
 var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceModGain=null,voiceEffect='normal';
 var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0;
@@ -260,7 +260,16 @@ var ws=null,wsReconn=null;
 
 function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsPlayNode)lsPlayNode.port.postMessage(new Float32Array(e.data));}};}
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
-function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0,pin:$('iPin')?$('iPin').value.trim():''});}
+function doJoin(){
+    wsSend({
+        type:'join', 
+        station:S.station, 
+        nick:S.nick, 
+        role:S.mode, 
+        sampleRate:S.mode==='broadcaster'?44100:0,
+        pin:S.pin // Artık hafızadaki PIN'i gönderiyoruz
+    });
+}
 function setConn(s){$('connDot').className='conn-dot '+s;}
 var $=function(id){return document.getElementById(id);};
 var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
@@ -295,7 +304,10 @@ function initLogin(){
      pinInp.addEventListener('input',check); 
 
     btn.addEventListener('click',function(){
-        if(btn.disabled)return;S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
+        if(btn.disabled)return;
+        S.station=$('iStation').value.trim();
+        S.nick=$('iNick').value.trim();
+        S.pin=pinInp.value.trim(); // PIN'i hafızaya kaydet!
          $('login').classList.add('hidden');$('app').classList.remove('hidden');
          $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
         if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
@@ -318,7 +330,13 @@ case'request-sent':$('reqSentMsg').classList.remove('hidden');setTimeout(functio
 case'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong').textContent=m.song;setTimeout(function(){$('reqAccMsg').classList.add('hidden');},5000);break;
 case'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
 case'schedule-update':if(S.mode==='listener')renderSch(m.schedule,false);break;
-case'error':toast(m.message);$('login').classList.remove('hidden');$('app').classList.add('hidden');break;
+case'error': 
+    toast(m.message); 
+    $('login').classList.remove('hidden');
+    $('app').classList.add('hidden');
+    S.mode = null; // Döngüyü kırmak için modu sıfırla
+    if(ws) ws.close();
+    break;
 }}
 function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
 function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
@@ -370,7 +388,7 @@ bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixG
 
 // AudioWorklet Entegrasyonu
 bcAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(function(){
-    bcSendNode=new AudioWorkletNode(bcAudioCtx,'recorder-worklet',{numberOfInputs:1,numberOfOutputs:0});
+    bcSendNode=new AudioWorkletNode(bcAudioCtx,'recorder-worklet',{numberOfInputs:1,numberOfOutputs:1});
     bcSendNode.port.onmessage=function(e){if(ws&&ws.readyState===1)ws.send(e.data.buffer);};
     bcMixGain.connect(bcSendNode);
     bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendNode.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
