@@ -96,6 +96,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
 <div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"></div>
 <div id="modeCards" class="grid grid-cols-2 gap-3 mb-6">
+    <!-- Mevcut Yayıncı ve Dinleyici kartların burada duruyor -->
+</div>
+<!-- BU SATIRI EKLE -->
 <input id="iPin" class="inp hidden" type="password" placeholder="Yayıncı PIN" maxlength="10">
 <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
 <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
@@ -281,37 +284,59 @@ function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}
 // if(!location.search.includes('dj=1')){document.querySelectorAll('.mode-card').forEach(function(c){if(c.dataset.m==='broadcaster')c.classList.add('hide-bc');});}
 
 function initLogin(){
-var cards=document.querySelectorAll('.mode-card:not(.hide-bc)'),btn=$('btnGo'),pinInp=$('iPin');
-var check=function(){
-    var isValid = $('iStation').value.trim() && $('iNick').value.trim() && S.mode;
-    if(S.mode === 'broadcaster') isValid = isValid && pinInp.value.trim();
-    btn.disabled = !isValid;
-};
-cards.forEach(function(c){
-    var go=function(){
-        cards.forEach(function(x){x.classList.remove('sel');});
-        c.classList.add('sel');S.mode=c.dataset.m;check();
-        // Yayıncı seçilince PIN inputunu göster
-        if(S.mode === 'broadcaster') pinInp.classList.remove('hidden');
-        else pinInp.classList.add('hidden');
+    var cards = document.querySelectorAll('.mode-card'), // not(.hide-bc) kısımlarını sildim, artık helesi görünmeli
+        btn = $('btnGo'), 
+        pinInp = $('iPin');
+        
+    var check = function(){
+        var isValid = $('iStation').value.trim() && $('iNick').value.trim() && S.mode;
+        if(S.mode === 'broadcaster') {
+            isValid = isValid && pinInp.value.trim(); // Yayıncı ise PIN de şart
+        }
+        btn.disabled = !isValid;
     };
-    c.addEventListener('click',go);
-    c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
-});
- $('iStation').addEventListener('input',check);
- $('iNick').addEventListener('input',check);
- pinInp.addEventListener('input',check); // PIN yazınca butonu aktif et
+    
+    cards.forEach(function(c){
+        var go = function(){
+            cards.forEach(function(x){ x.classList.remove('sel'); });
+            c.classList.add('sel'); 
+            S.mode = c.dataset.m; 
+            check();
+            // Yayıncı seçilince PIN inputunu göster, değilse gizle
+            if(S.mode === 'broadcaster') {
+                pinInp.classList.remove('hidden');
+            } else {
+                pinInp.classList.add('hidden');
+            }
+        };
+        c.addEventListener('click', go);
+        c.addEventListener('keydown', function(e){
+            if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); go(); }
+        });
+    });
+    
+    $('iStation').addEventListener('input', check);
+    $('iNick').addEventListener('input', check);
+    pinInp.addEventListener('input', check); // PIN yazınca butonu aktif et
 
-btn.addEventListener('click',function(){
-if(btn.disabled)return;
-S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
- $('login').classList.add('hidden');$('app').classList.remove('hidden');
- $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
-if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
- $('fStatus').textContent=S.nick+' olarak giris yaptiniz';
- if(ws&&ws.readyState===1) doJoin();
-});}
-
+    btn.addEventListener('click', function(){
+        if(btn.disabled) return;
+        S.station = $('iStation').value.trim(); 
+        S.nick = $('iNick').value.trim();
+        $('login').classList.add('hidden'); 
+        $('app').classList.remove('hidden');
+        $('hdrName').textContent = S.station; 
+        var r = $('hdrRole'); 
+        r.classList.remove('hidden'); 
+        r.textContent = S.mode === 'broadcaster' ? 'YAYINCI' : 'DINLEYICI';
+        
+        if(S.mode === 'broadcaster'){ $('vBc').classList.remove('hidden'); setupBc(); }
+        else { $('vLs').classList.remove('hidden'); setupLs(); }
+        
+        $('fStatus').textContent = S.nick + ' olarak giris yaptiniz'; 
+        if(ws && ws.readyState === 1) doJoin();
+    });
+}
 function handleMsg(m){
 switch(m.type){
 case'joined':if(m.role==='broadcaster'){$('fStatus').textContent='Yayinci olarak baglandiniz';}else{$('fStatus').textContent='Dinleyici olarak baglandiniz';if(m.active){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');}updCount(m.count||0);if(m.schedule)renderSch(m.schedule,false);}break;
