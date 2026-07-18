@@ -277,8 +277,8 @@ var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',war
 function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style.setProperty('--accent',t.accent);document.documentElement.style.setProperty('--warm',t.warm);document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});try{localStorage.setItem('radio-theme',n);}catch(e){}}
 function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
 
-/* YAYINCI GORUNUM KONTROLU */
-if(!location.search.includes('dj=1')){document.querySelectorAll('.mode-card').forEach(function(c){if(c.dataset.m==='broadcaster')c.classList.add('hide-bc');});}
+/* YAYINCI GORUNUM KONTROLU - Artık PIN sistemi aktif olduğu için karta herkes görebilir, yayına sadece PIN ile başlanabilir */
+// if(!location.search.includes('dj=1')){document.querySelectorAll('.mode-card').forEach(function(c){if(c.dataset.m==='broadcaster')c.classList.add('hide-bc');});}
 
 function initLogin(){
 var cards=document.querySelectorAll('.mode-card:not(.hide-bc)'),btn=$('btnGo'),pinInp=$('iPin');
