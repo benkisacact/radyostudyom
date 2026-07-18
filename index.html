@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Radyo DJ Stüdyo v3 (AI + Worklet)</title>
+<title>Radyo DJ Stüdyo v2</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -78,9 +78,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .drop-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(255,45,85,.04)}
 .np-marquee{overflow:hidden;white-space:nowrap}.np-marquee span{display:inline-block;animation:mq 12s linear infinite}@keyframes mq{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
-/* GLM DJ Sohbet Balonu Stilleri */
-.mr.ai-msg .mn{color:#4d96ff !important; display:flex; align-items:center; gap:4px;}
-.mr.ai-msg .mt{display:block; margin-top:4px; background:rgba(77,150,255,.08); border-left:2px solid #4d96ff; padding:6px 10px; border-radius:0 8px 8px 8px; color:#e0e7ff;}
 @media(max-width:860px){.chat-p{position:fixed;right:-320px;top:0;bottom:0;z-index:100;transition:right .3s ease;box-shadow:-8px 0 30px rgba(0,0,0,.5);height:100vh}.chat-p.open{right:0}.cbtn{display:flex}}
 @media(max-width:600px){.vm{width:160px!important;height:160px!important}.vlm{width:50px!important;height:50px!important;font-size:7px!important}.vhm{width:8px!important;height:8px!important}.vu-bar{height:100px!important}.cg{flex-direction:column!important}}
 @media(prefers-reduced-motion:reduce){.vinyl.spin,.login-bg,.float-orb,.on-air-dot.active,.rec-dot{animation:none!important}.mr{animation:none!important}*{transition-duration:.01ms!important}}
@@ -89,28 +86,21 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <body class="bg-atm">
 <div id="toast" class="toast-el" role="alert" aria-live="polite"></div>
 <div id="cov" class="cov"></div>
-
-<!-- LOGIN SCREEN -->
 <section id="login" class="fixed inset-0 flex items-center justify-center z-50 px-4">
 <div class="vinyl login-bg" aria-hidden="true"><div class="vinyl-lbl" style="width:120px;height:120px;font-size:11px">RADIO<br>STUDIO</div><div class="vinyl-hole" style="width:16px;height:16px"></div></div>
 <div class="float-orb" style="width:6px;height:6px;background:var(--accent);opacity:.2;top:18%;left:12%" aria-hidden="true"></div>
 <div class="float-orb" style="width:4px;height:4px;background:var(--warm);opacity:.15;top:72%;left:22%;animation-delay:-3s" aria-hidden="true"></div>
 <div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
 <h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
-<p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v3 (AI)</p>
-<div class="space-y-3 mb-6">
-    <input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30">
-    <input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20">
+<p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
+<div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"></div>
+<div class="grid grid-cols-2 gap-3 mb-6">
+<div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
+<div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
 </div>
-<div id="modeCards" class="grid grid-cols-2 gap-3 mb-6">
-    <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
-    <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
-</div>
-<input id="iPin" class="inp hidden" type="password" placeholder="Yayıncı PIN" maxlength="10">
 <button id="btnGo" class="btn w-full" disabled>YAYINA BASLA</button>
 </div></section>
 
-<!-- APP MAIN -->
 <div id="app" class="hidden flex flex-col h-screen">
 <header id="hdr" class="flex items-center justify-between px-5 py-3 border-b" style="border-color:var(--border);background:var(--surface);min-height:54px">
 <div class="flex items-center gap-3"><div id="connDot" class="conn-dot wait"></div><span id="hdrName" class="font-display text-sm font-bold tracking-wider truncate max-w-[160px]"></span><span id="hdrRole" class="badge hidden"></span></div>
@@ -125,7 +115,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="flex flex-1 overflow-hidden">
 <main class="flex-1 flex flex-col overflow-y-auto p-4 md:p-6">
 
-<!-- BROADCASTER VIEW -->
 <div id="vBc" class="hidden flex-1 flex flex-col items-center gap-4">
 <div class="flex items-center gap-5 md:gap-8">
 <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL" style="height:0%"></div><div class="vu-peak" id="vuPL" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
@@ -216,7 +205,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 </div></div>
 </div></div>
 
-<!-- LISTENER VIEW -->
 <div id="vLs" class="hidden flex-1 flex flex-col items-center gap-4">
 <div class="flex items-center gap-5 md:gap-8">
 <div class="flex flex-col items-center gap-2"><div class="vu-bar" style="height:160px"><div class="vu-fill" id="vuFL2" style="height:0%"></div><div class="vu-peak" id="vuPL2" style="bottom:0%"></div></div><span class="font-display text-[9px] tracking-widest" style="color:var(--muted)">L</span></div>
@@ -244,32 +232,22 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <aside id="chatP" class="chat-p">
 <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:var(--border)"><h2 class="font-display text-xs font-bold tracking-widest">SOHBET</h2><div class="flex items-center gap-2"><span id="chatOn" class="badge">0</span><button id="btnChatX" class="cbtn items-center justify-center w-7 h-7 rounded" style="color:var(--muted);background:0 0;border:none;cursor:pointer"><i class="fas fa-times"></i></button></div></div>
 <div id="chatMsgs" class="chat-msgs" role="log" aria-live="polite"></div>
-<div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesaj yazin... (Yapay zeka icin: !ai merhaba)" maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
+<div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesaj yazin..." maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
 </aside></div>
 
 <footer class="flex items-center justify-between px-5 py-2 border-t text-xs" style="border-color:var(--border);background:var(--surface);color:var(--muted);min-height:38px"><span id="fStatus">Hazir</span><span id="fConn">Baglaniyor...</span></footer>
 </div>
 
 <script>
-var S={mode:null,station:'',nick:'',pin:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
-var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,bcSrc=null,bcMic=null,bcSendNode=null,bcSilent=null,bcStreamDest=null,bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
+var S={mode:null,station:'',nick:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
+var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,bcSrc=null,bcMic=null,bcSendProc=null,bcSilent=null,bcStreamDest=null,bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
 var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceModGain=null,voiceEffect='normal';
-var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0;
+var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayProc=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0,lsAudioQ=[],LS_MAX_Q=60;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
-
-function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsPlayNode)lsPlayNode.port.postMessage(new Float32Array(e.data));}};}
+function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q)lsAudioQ.push(new Float32Array(e.data));}};}
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
-function doJoin(){
-    wsSend({
-        type:'join', 
-        station:S.station, 
-        nick:S.nick, 
-        role:S.mode, 
-        sampleRate:S.mode==='broadcaster'?44100:0,
-        pin:S.pin // Artık hafızadaki PIN'i gönderiyoruz
-    });
-}
+function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0});}
 function setConn(s){$('connDot').className='conn-dot '+s;}
 var $=function(id){return document.getElementById(id);};
 var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
@@ -281,40 +259,17 @@ function esc(s){var d=document.createElement('div');d.textContent=s;return d.inn
 var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',warm:'#00b4d8'},yesil:{accent:'#00e676',warm:'#76ff03'},mor:{accent:'#cc5de8',warm:'#e040fb'},turuncu:{accent:'#ff9500',warm:'#ff6d00'}};
 function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style.setProperty('--accent',t.accent);document.documentElement.style.setProperty('--warm',t.warm);document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});try{localStorage.setItem('radio-theme',n);}catch(e){}}
 function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
-
 function initLogin(){
-    var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo'),pinInp=$('iPin');
-    var check=function(){
-        var isValid = $('iStation').value.trim() && $('iNick').value.trim() && S.mode;
-        if(S.mode === 'broadcaster') isValid = isValid && pinInp.value.trim();
-        btn.disabled = !isValid;
-    };
-    cards.forEach(function(c){
-        var go=function(){
-            cards.forEach(function(x){x.classList.remove('sel');});
-            c.classList.add('sel');S.mode=c.dataset.m;check();
-            if(S.mode === 'broadcaster') pinInp.classList.remove('hidden');
-            else pinInp.classList.add('hidden');
-        };
-        c.addEventListener('click',go);
-        c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});
-    });
-     $('iStation').addEventListener('input',check);
-     $('iNick').addEventListener('input',check);
-     pinInp.addEventListener('input',check); 
-
-    btn.addEventListener('click',function(){
-        if(btn.disabled)return;
-        S.station=$('iStation').value.trim();
-        S.nick=$('iNick').value.trim();
-        S.pin=pinInp.value.trim(); // PIN'i hafızaya kaydet!
-         $('login').classList.add('hidden');$('app').classList.remove('hidden');
-         $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
-        if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
-         $('fStatus').textContent=S.nick+' olarak giris yaptiniz';if(ws&&ws.readyState===1)doJoin();
-    });
-}
-
+var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo');
+var check=function(){btn.disabled=!($('iStation').value.trim()&&$('iNick').value.trim()&&S.mode);};
+cards.forEach(function(c){var go=function(){cards.forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');S.mode=c.dataset.m;check();};c.addEventListener('click',go);c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+ $('iStation').addEventListener('input',check);$('iNick').addEventListener('input',check);
+btn.addEventListener('click',function(){
+if(btn.disabled)return;S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
+ $('login').classList.add('hidden');$('app').classList.remove('hidden');
+ $('hdrName').textContent=S.station;var r=$('hdrRole');r.classList.remove('hidden');r.textContent=S.mode==='broadcaster'?'YAYINCI':'DINLEYICI';
+if(S.mode==='broadcaster'){$('vBc').classList.remove('hidden');setupBc();}else{$('vLs').classList.remove('hidden');setupLs();}
+ $('fStatus').textContent=S.nick+' olarak giris yaptiniz';if(ws&&ws.readyState===1)doJoin();});}
 function handleMsg(m){
 switch(m.type){
 case'joined':if(m.role==='broadcaster'){$('fStatus').textContent='Yayinci olarak baglandiniz';}else{$('fStatus').textContent='Dinleyici olarak baglandiniz';if(m.active){S.bcSampleRate=m.sampleRate||44100;showBcActive(m.song||'');}updCount(m.count||0);if(m.schedule)renderSch(m.schedule,false);}break;
@@ -330,13 +285,6 @@ case'request-sent':$('reqSentMsg').classList.remove('hidden');setTimeout(functio
 case'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong').textContent=m.song;setTimeout(function(){$('reqAccMsg').classList.add('hidden');},5000);break;
 case'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
 case'schedule-update':if(S.mode==='listener')renderSch(m.schedule,false);break;
-case'error': 
-    toast(m.message); 
-    $('login').classList.remove('hidden');
-    $('app').classList.add('hidden');
-    S.mode = null; // Döngüyü kırmak için modu sıfırla
-    if(ws) ws.close();
-    break;
 }}
 function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
 function showBcStopped(){S.broadcastActive=false;stopListening();$('btnLs').disabled=true;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('oaDot').classList.remove('active');$('oaText').textContent='OFFLINE';$('oaText').style.color='var(--muted)';$('hdr').classList.remove('hdr-live');$('vinLs').classList.remove('spin');$('npText').textContent='Yayin bekleniyor...';$('btnReqSend').disabled=true;}
@@ -363,7 +311,6 @@ document.querySelectorAll('.voice-fx').forEach(function(b){b.addEventListener('c
  $('btnAd').addEventListener('click',toggleAd);
  $('btnSchAdd').addEventListener('click',addSchRow);$('btnSchSave').addEventListener('click',saveSch);
 resizeCv($('cvBc'));}
-
 function toggleBc(){
 if(S.broadcasting){stopBc();return;}
 var devId=$('selMic').value;var cons=(devId&&devId!=='')?{audio:{deviceId:{exact:devId}}}:{audio:true};
@@ -385,25 +332,17 @@ bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').valu
 djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
 djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
 bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
-
-// AudioWorklet Entegrasyonu
-bcAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(function(){
-    bcSendNode=new AudioWorkletNode(bcAudioCtx,'recorder-worklet',{numberOfInputs:1,numberOfOutputs:1});
-    bcSendNode.port.onmessage=function(e){if(ws&&ws.readyState===1)ws.send(e.data.buffer);};
-    bcMixGain.connect(bcSendNode);
-    bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendNode.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
-    bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
-
-    S.broadcasting=true;S.bcStart=Date.now();S.song=$('iSong').value.trim();
-    $('btnBc').textContent='YAYINI DURDUR';$('btnBc').classList.add('stop');$('btnMic').disabled=false;$('iSong').disabled=false;
-    $('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');$('fStatus').textContent='Yayin aktif';
-    $('btnRec').disabled=false;$('btnAd').disabled=false;
-    S.timerInt=setInterval(function(){$('tmBc').textContent=fmtT((Date.now()-S.bcStart)/1000);if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);},1000);
-    wsSend({type:'broadcast-start',song:S.song,sampleRate:bcAudioCtx.sampleRate,schedule:S.schedule});addSys('Yayin basladi!');vizBc();toast('Yayin baslatildi');
-}).catch(function(err){toast('AudioWorklet yuklenemedi!');console.error(err);});
-
+bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1)ws.send(e.inputBuffer.getChannelData(0).buffer);};bcMixGain.connect(bcSendProc);
+bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
+bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
+bcFreqData=new Uint8Array(bcAnalyser.frequencyBinCount);
+S.broadcasting=true;S.bcStart=Date.now();S.song=$('iSong').value.trim();
+ $('btnBc').textContent='YAYINI DURDUR';$('btnBc').classList.add('stop');$('btnMic').disabled=false;$('iSong').disabled=false;
+ $('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');$('fStatus').textContent='Yayin aktif';
+ $('btnRec').disabled=false;$('btnAd').disabled=false;
+S.timerInt=setInterval(function(){$('tmBc').textContent=fmtT((Date.now()-S.bcStart)/1000);if(S.bcStart)$('stDur').textContent=fmtM((Date.now()-S.bcStart)/1000);},1000);
+wsSend({type:'broadcast-start',song:S.song,sampleRate:bcAudioCtx.sampleRate,schedule:S.schedule});addSys('Yayin basladi!');vizBc();toast('Yayin baslatildi');
 }).catch(function(e){if(e.name==='NotAllowedError')toast('Mikrofon izni verilmedi!');else if(e.name==='NotFoundError')toast('Mikrofon bulunamadi!');else toast('Hata: '+e.message);});}
-
 function stopBc(){
 S.broadcasting=false;S.micOn=false;clearInterval(S.timerInt);
 if(djAudio){djAudio.pause();djAudio.src='';}djPlaying=false;djCurIdx=-1;
@@ -411,7 +350,7 @@ if(bcMic){bcMic.getTracks().forEach(function(t){t.stop();});bcMic=null;}
 if(voiceModOsc)try{voiceModOsc.stop();}catch(e){}
 [voiceFilter,voiceDelay,voiceDelayFb,voiceModGain].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});
 voiceFilter=voiceDelay=voiceDelayFb=voiceModOsc=voiceModGain=null;voiceEffect='normal';
-[bcSendNode,bcSilent,bcStreamDest].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});bcSendNode=null;bcSilent=null;bcStreamDest=null;
+[bcSendProc,bcSilent,bcStreamDest].forEach(function(n){if(n)try{n.disconnect();}catch(e){}});bcSendProc=null;bcSilent=null;bcStreamDest=null;
 if(bcRecorder&&S.recording)stopRecInt();
 if(bcAudioCtx)bcAudioCtx.close();bcAudioCtx=bcAnalyser=bcGain=bcMixGain=bcDjGain=bcDjSource=bcFxGain=null;
 if(bcRafId){cancelAnimationFrame(bcRafId);bcRafId=null;}
@@ -439,7 +378,7 @@ else if(type==='cheer'){var cd=3,csrc=bcAudioCtx.createBufferSource();csrc.buffe
 else if(type==='rain'){var rd=4,rs=bcAudioCtx.createBufferSource();rs.buffer=mkNoise(rd);var rbp=bcAudioCtx.createBiquadFilter();rbp.type='bandpass';rbp.frequency.value=3000;rbp.Q.value=.5;var rg=bcAudioCtx.createGain();rg.gain.setValueAtTime(0,t);rg.gain.linearRampToValueAtTime(.15,t+.3);rg.gain.setValueAtTime(.15,t+rd-.3);rg.gain.linearRampToValueAtTime(0,t+rd);rs.connect(rbp);rbp.connect(rg);rg.connect(bcFxGain);rs.start(t);rs.stop(t+rd);}
 else if(type==='thunder'){var td=3,ts=bcAudioCtx.createBufferSource();ts.buffer=mkNoise(td);var tlp=bcAudioCtx.createBiquadFilter();tlp.type='lowpass';tlp.frequency.value=200;var tg=bcAudioCtx.createGain();tg.gain.setValueAtTime(0,t);tg.gain.linearRampToValueAtTime(.5,t+.05);tg.gain.exponentialRampToValueAtTime(.1,t+.5);tg.gain.exponentialRampToValueAtTime(.001,t+td);ts.connect(tlp);tlp.connect(tg);tg.connect(bcFxGain);ts.start(t);ts.stop(t+td);}
 else if(type==='birds'){var bn=8+Math.floor(Math.random()*5);for(var k=0;k<bn;k++){var bt=t+Math.random()*3.5,bf=2000+Math.random()*3000,bd=.05+Math.random()*.15,bo=bcAudioCtx.createOscillator();bo.type='sine';bo.frequency.setValueAtTime(bf,bt);bo.frequency.linearRampToValueAtTime(bf*(.8+Math.random()*.4),bt+bd);var bg2=bcAudioCtx.createGain();bg2.gain.setValueAtTime(0,bt);bg2.gain.linearRampToValueAtTime(.12,bt+.01);bg2.gain.exponentialRampToValueAtTime(.001,bt+bd);bo.connect(bg2);bg2.connect(bcFxGain);bo.start(bt);bo.stop(bt+bd+.05);}}
-else if(type==='ocean'){var od=4,os=bcAudioCtx.createBufferSource();os.buffer=mkNoise(od);var olp=bcAudioCtx.createBiquadFilter();olp.type='lowpass';olp.frequency.value=500;olp.Q.value=5;var olfo=bcAudioCtx.createOscillator();olfo.frequency.value=.3;var olg=bcAudioCtx.createGain();olg.gain.value=400;olfo.connect(olg);olg.connect(olp.frequency);var og=bcAudioCtx.createGain();og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.2,t+.5);og.gain.setValueAtTime(.2,t+od-.5);og.gain.linearRampToValueAtTime(0,t+od);olfo.start(t);olfo.stop(t+od);os.connect(olp);olp.connect(og);og.connect(bcFxGain);os.start(t);os.stop(t+od);}else if(type==='alarm'){mkOsc(t,[800,600,800,600],[0,.1,.2,.3],[.4,.4,.4,.4],.4);}}
+else if(type==='ocean'){var od=4,os=bcAudioCtx.createBufferSource();os.buffer=mkNoise(od);var olp=bcAudioCtx.createBiquadFilter();olp.type='lowpass';olp.frequency.value=500;olp.Q.value=5;var olfo=bcAudioCtx.createOscillator();olfo.frequency.value=.3;var olg=bcAudioCtx.createGain();olg.gain.value=400;olfo.connect(olg);olg.connect(olp.frequency);var og=bcAudioCtx.createGain();og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.2,t+.5);og.gain.setValueAtTime(.2,t+od-.5);og.gain.linearRampToValueAtTime(0,t+od);olfo.start(t);olfo.stop(t+od);os.connect(olp);olp.connect(og);og.connect(bcFxGain);os.start(t);os.stop(t+od);}}
 function mkOsc(t,freqs,dels,vols,dur){for(var i=0;i<freqs.length;i++){var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();o.type='sine';o.frequency.value=freqs[i];g.gain.setValueAtTime(0,t+dels[i]);g.gain.linearRampToValueAtTime(vols[i],t+dels[i]+.02);g.gain.exponentialRampToValueAtTime(.001,t+dels[i]+dur);o.connect(g);g.connect(bcFxGain);o.start(t+dels[i]);o.stop(t+dels[i]+dur+.05);}}
 function toggleRec(){if(!S.broadcasting||!bcStreamDest)return;if(!S.recording)startRec();else stopRecInt();}
 function startRec(){bcRecChunks=[];bcRecorder=new MediaRecorder(bcStreamDest.stream,{mimeType:'audio/webm'});bcRecorder.ondataavailable=function(e){if(e.data.size>0)bcRecChunks.push(e.data);};bcRecorder.onstop=function(){$('btnRecDl').classList.remove('hidden');};bcRecorder.start();S.recording=true;$('btnRec').innerHTML='<i class="fas fa-stop mr-1"></i>KAYIT DURDUR';$('btnRec').classList.remove('btn-red');$('btnRec').classList.add('stop');$('recInd').classList.remove('hidden');toast('Kayit basladi');}
@@ -452,28 +391,8 @@ function saveSch(){var rows=$('schBody').querySelectorAll('tr'),sch=[];rows.forE
 function renderSch(data,isBc){var tb=isBc?$('schBody'):$('schBodyLs');tb.innerHTML='';if(!data||!data.length){tb.innerHTML='<tr><td colspan="'+(isBc?3:2)+'" class="text-center py-4" style="color:var(--muted)">Program yok</td></tr>';return;}var now=new Date(),nowMin=now.getHours()*60+now.getMinutes();for(var i=0;i<data.length;i++){var p=data[i],pts=p.time.split(':'),min=parseInt(pts[0])*60+parseInt(pts[1]);var isCur=nowMin>=min&&(i===data.length-1||nowMin<parseInt(data[i+1].time.split(':')[0])*60+parseInt(data[i+1].time.split(':')[1]));var tr=document.createElement('tr');if(isCur)tr.className='current-row';tr.innerHTML='<td>'+p.time+'</td><td>'+esc(p.name)+'</td>'+(isBc?'<td></td>':'');tb.appendChild(tr);}}
 function setupLs(){$('btnLs').addEventListener('click',toggleLs);$('rngVol').addEventListener('input',function(){if(lsGain)lsGain.gain.value=parseInt($('rngVol').value)/100;});$('btnReqSend').addEventListener('click',sendReq);$('iReqSong').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendReq();}});resizeCv($('cvLs'));}
 function sendReq(){var t=$('iReqSong').value.trim();if(!t||!S.broadcastActive)return;wsSend({type:'request',song:t});$('iReqSong').value='';}
-
-// LISTENER AUDIO WORKLET
-function toggleLs(){
-    if(S.listening){stopListening();return;}
-    if(!S.broadcastActive)return;
-    lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});
-    lsAudioCtx.audioWorklet.addModule('/worklet-processor.js').then(()=>{
-        lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;
-        lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;
-        lsPlayNode=new AudioWorkletNode(lsAudioCtx,'player-worklet',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[1]});
-        lsPlayNode.connect(lsGain);
-        lsGain.connect(lsAnalyser);
-        lsAnalyser.connect(lsAudioCtx.destination);
-        lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);
-        S.listening=true;S.lsStart=Date.now();
-        $('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');
-        S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);
-        vizLs();
-    }).catch(err=>{toast('Ses modulu yuklenemedi!');console.error(err);});
-}
-function stopListening(){S.listening=false;if(lsPlayNode)try{lsPlayNode.disconnect();}catch(e){}lsPlayNode=null;if(lsAudioCtx)lsAudioCtx.close();lsAudioCtx=lsAnalyser=lsGain=null;if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}clearInterval(S.timerInt);$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('vinLs').classList.remove('spin');$('tmLs').textContent='00:00:00';$('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));}
-
+function toggleLs(){if(S.listening){stopListening();return;}if(!S.broadcastActive)return;lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;lsPlayProc=lsAudioCtx.createScriptProcessor(2048,0,1);lsPlayProc.onaudioprocess=function(e){var out=e.outputBuffer.getChannelData(0);if(lsAudioQ.length>0){var ch=lsAudioQ.shift();for(var i=0;i<out.length;i++)out[i]=i<ch.length?ch[i]:0;}else{for(var j=0;j<out.length;j++)out[j]=0;}};lsPlayProc.connect(lsGain);lsGain.connect(lsAnalyser);lsAnalyser.connect(lsAudioCtx.destination);lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);lsAudioQ.length=0;S.listening=true;S.lsStart=Date.now();$('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);vizLs();}
+function stopListening(){S.listening=false;if(lsPlayProc)try{lsPlayProc.disconnect();}catch(e){}lsPlayProc=null;if(lsAudioCtx)lsAudioCtx.close();lsAudioCtx=lsAnalyser=lsGain=null;if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}clearInterval(S.timerInt);lsAudioQ.length=0;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('vinLs').classList.remove('spin');$('tmLs').textContent='00:00:00';$('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));}
 function vizBc(){if(!S.broadcasting||!bcAnalyser)return;bcRafId=requestAnimationFrame(vizBc);bcAnalyser.getByteFrequencyData(bcFreqData);var len=bcFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=bcFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL','vuPL',Math.min(100,(sL/(len/2))*100*(.92+Math.random()*.16)),true);setVU('vuFR','vuPR',Math.min(100,(sR/(len/2))*100*(.92+Math.random()*.16)),false);drawBars($('cvBc'),bcFreqData);}
 function vizLs(){if(!S.listening||!lsAnalyser)return;lsRafId=requestAnimationFrame(vizLs);lsAnalyser.getByteFrequencyData(lsFreqData);var len=lsFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=lsFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL2','vuPL2',Math.min(100,(sL/(len/2))*100),true);setVU('vuFR2','vuPR2',Math.min(100,(sR/(len/2))*100),false);drawBars($('cvLs'),lsFreqData);}
 function setVU(fId,pId,v,isL){var f=$(fId),p=$(pId);if(!f||!p)return;var vv=Math.max(0,Math.min(100,v));f.style.height=vv+'%';var pk=isL?lsPeakL:lsPeakR;if(vv>pk)pk=vv;else pk=Math.max(0,pk-.6);if(isL)lsPeakL=pk;else lsPeakR=pk;p.style.bottom=pk+'%';}
@@ -481,7 +400,7 @@ function drawBars(cv,data){if(!cv)return;var ctx=cv.getContext('2d'),dpr=window.
 function clearCv(cv){if(!cv)return;cv.getContext('2d').clearRect(0,0,cv.width,cv.height);}
 function resizeCv(cv){if(!cv||!cv.parentElement)return;var r=cv.parentElement.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cv.getContext('2d').scale(d,d);}
 function sendChat(){var inp=$('iChat'),t=inp.value.trim();if(!t)return;var m={type:'chat',nick:S.nick,text:t,time:Date.now()};wsSend(m);addChat(m);inp.value='';inp.focus();}
-function addChat(m){var c=$('chatMsgs'),r=document.createElement('div');r.className='mr';var col=nCol(m.nick),t=new Date(m.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}),me=m.nick===S.nick;var isAI=m.nick==='GLM-DJ';var aiIcon=isAI?'<i class="fas fa-robot" style="font-size:11px"></i>':'';if(isAI)r.classList.add('ai-msg');r.innerHTML='<span class="mn" style="color:'+(isAI?'#4d96ff':col)+'">'+aiIcon+esc(m.nick)+(me?' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>':'')+'</span><span class="mt">'+esc(m.text)+'</span><span class="mtime">'+t+'</span>';c.appendChild(r);c.scrollTop=c.scrollHeight;}
+function addChat(m){var c=$('chatMsgs'),r=document.createElement('div');r.className='mr';var col=nCol(m.nick),t=new Date(m.time).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}),me=m.nick===S.nick;r.innerHTML='<span class="mn" style="color:'+col+'">'+esc(m.nick)+(me?' <span style="color:var(--muted);font-weight:400;font-size:10px">(sen)</span>':'')+'</span><span class="mt">'+esc(m.text)+'</span><span class="mtime">'+t+'</span>';c.appendChild(r);c.scrollTop=c.scrollHeight;}
 function addSys(t){var c=$('chatMsgs'),r=document.createElement('div');r.className='msys';r.textContent=t;c.appendChild(r);c.scrollTop=c.scrollHeight;}
 function initChatMob(){$('btnChatTog').addEventListener('click',function(){$('chatP').classList.add('open');$('cov').classList.add('open');});$('btnChatX').addEventListener('click',closeCM);$('cov').addEventListener('click',closeCM);}
 function closeCM(){$('chatP').classList.remove('open');$('cov').classList.remove('open');}
