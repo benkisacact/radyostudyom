@@ -4,7 +4,9 @@ const path = require('path');
 const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 3000;
+const BROADCASTER_PIN = '1234'; // Yayıncı güvenlik PIN'ini buradan değiştirebilirsin
 const stations = new Map();
+const activeNicks = new Set(); // Sistemdeki tüm benzersiz rumuzlar
 
 const server = http.createServer((req, res) => {
     if (req.url === '/' || req.url === '/index.html') {
@@ -47,9 +49,27 @@ wss.on('connection', (ws) => {
         switch (msg.type) {
 
             case 'join':
+                var lowerNick = (msg.nick || '').toLowerCase().trim();
+                
+                // 1. Rumuz boşsa veya başkası tarafından kullanılıyorsa engelle
+                if (!lowerNick || activeNicks.has(lowerNick)) {
+                    ws.send(JSON.stringify({ type: 'error', reason: 'nick-taken' }));
+                    ws.close();
+                    return;
+                }
+                
+                // 2. Yayıncı ise PIN kontrolü yap
+                if (msg.role === 'broadcaster' && msg.pin !== BROADCASTER_PIN) {
+                    ws.send(JSON.stringify({ type: 'error', reason: 'wrong-pin' }));
+                    ws.close();
+                    return;
+                }
+
+                activeNicks.add(lowerNick); // Rumuzu sisteme kaydet
                 ws.station = msg.station;
                 ws.nick = msg.nick;
                 ws.role = msg.role;
+
                 if (!stations.has(ws.station)) {
                     stations.set(ws.station, {
                         bc: null, song: '', listeners: new Set(),
@@ -102,7 +122,7 @@ wss.on('connection', (ws) => {
                 sendAll(ws.station, {
                     type: 'chat', nick: ws.nick,
                     text: msg.text, time: Date.now()
-                }, ws); /* ws ekleyerek mesajı gönderene geri yollamayı engelledik */
+                }, ws); // ws ekleyerek mesajı gönderene geri yollamayı engelledik
                 break;
 
             case 'request':
@@ -225,7 +245,7 @@ wss.on('connection', (ws) => {
                     sendAll(ws.station, {
                         type: 'schedule-update',
                         schedule: stSch.schedule
-                    }, ws);
+                    });
                 }
                 break;
 
@@ -235,6 +255,7 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
+        if (ws.nick) activeNicks.delete(ws.nick.toLowerCase()); // Kişi çıkınca rumuzu listeden sil
         if (!ws.station || !stations.has(ws.station)) return;
         var st = stations.get(ws.station);
         if (ws.role === 'broadcaster') {

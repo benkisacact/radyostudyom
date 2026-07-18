@@ -93,7 +93,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
 <h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
 <p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
-<div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"></div>
+<div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"><input id="iPin" class="inp" type="password" placeholder="Yayinci PIN (Sadece yayincilar)" maxlength="10" style="display:none;"></div>
 <div class="grid grid-cols-2 gap-3 mb-6">
 <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
 <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
@@ -247,7 +247,7 @@ var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
 function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q)lsAudioQ.push(new Float32Array(e.data));}};}
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
-function doJoin(){wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0});}
+function doJoin(){var pin=S.mode==='broadcaster'?$('iPin').value.trim():'';wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0,pin:pin});}
 function setConn(s){$('connDot').className='conn-dot '+s;}
 var $=function(id){return document.getElementById(id);};
 var nColors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#20c997','#ffa94d','#69db7c','#da77f2','#74c0fc','#f783ac'];
@@ -261,9 +261,9 @@ function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style
 function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
 function initLogin(){
 var cards=document.querySelectorAll('.mode-card'),btn=$('btnGo');
-var check=function(){btn.disabled=!($('iStation').value.trim()&&$('iNick').value.trim()&&S.mode);};
-cards.forEach(function(c){var go=function(){cards.forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');S.mode=c.dataset.m;check();};c.addEventListener('click',go);c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
- $('iStation').addEventListener('input',check);$('iNick').addEventListener('input',check);
+var check=function(){var v=$('iStation').value.trim()&&$('iNick').value.trim()&&S.mode;if(S.mode==='broadcaster')v=v&&$('iPin').value.trim();btn.disabled=!v;};
+cards.forEach(function(c){var go=function(){cards.forEach(function(x){x.classList.remove('sel');});c.classList.add('sel');S.mode=c.dataset.m;$('iPin').style.display=(S.mode==='broadcaster'?'block':'none');check();};c.addEventListener('click',go);c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+ $('iStation').addEventListener('input',check);$('iNick').addEventListener('input',check);$('iPin').addEventListener('input',check);
 btn.addEventListener('click',function(){
 if(btn.disabled)return;S.station=$('iStation').value.trim();S.nick=$('iNick').value.trim();
  $('login').classList.add('hidden');$('app').classList.remove('hidden');
@@ -284,6 +284,7 @@ case'queue-update':renderReqs(m.queue);break;
 case'request-sent':$('reqSentMsg').classList.remove('hidden');setTimeout(function(){$('reqSentMsg').classList.add('hidden');},3000);break;
 case'request-accepted':$('reqAccMsg').classList.remove('hidden');$('reqAccSong').textContent=m.song;setTimeout(function(){$('reqAccMsg').classList.add('hidden');},5000);break;
 case'blocked':toast('Yayindan atildiniz.');setTimeout(function(){if(ws)ws.close();},1500);break;
+case'error':if(m.reason==='nick-taken'){toast('Bu rumuz zaten kullaniliyor!');setTimeout(function(){location.reload();},2500);}else if(m.reason==='wrong-pin'){toast('Yayinci PIN hatali!');setTimeout(function(){location.reload();},2500);}break;
 case'schedule-update':if(S.mode==='listener')renderSch(m.schedule,false);break;
 }}
 function showBcActive(song){S.broadcastActive=true;$('btnLs').disabled=false;$('oaDot').classList.add('active');$('oaText').textContent='CANLI';$('oaText').style.color='var(--accent)';$('hdr').classList.add('hdr-live');if(song)$('npText').textContent=song;$('btnReqSend').disabled=false;}
@@ -331,8 +332,8 @@ voiceDelay.connect(voiceModGain);voiceModGain.connect(bcMixGain);bcMixGain.conne
 bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;bcDjGain.connect(bcMixGain);
 djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
 djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
+bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
 bcSendProc=bcAudioCtx.createScriptProcessor(512,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1)ws.send(e.inputBuffer.getChannelData(0).buffer);};bcMixGain.connect(bcSendProc);
-
 bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
 bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
 bcFreqData=new Uint8Array(bcAnalyser.frequencyBinCount);
