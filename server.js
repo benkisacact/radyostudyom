@@ -19,7 +19,7 @@ const server = http.createServer((req, res) => {
     }
 });
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, perMessageDeflate: false });
 
 wss.on('connection', (ws) => {
     ws.alive = true;
@@ -102,7 +102,7 @@ wss.on('connection', (ws) => {
                 sendAll(ws.station, {
                     type: 'chat', nick: ws.nick,
                     text: msg.text, time: Date.now()
-                });
+                }, ws); /* ws ekleyerek mesajı gönderene geri yollamayı engelledik */
                 break;
 
             case 'request':
