@@ -1,10 +1,8 @@
-// worklet-processor.js
 class RecorderProcessor extends AudioWorkletProcessor {
   process(inputs) {
     const input = inputs[0];
     if (input.length > 0) {
-      const channelData = input[0]; // Mono kanal verisi
-      // Veriyi kopyalayarak ana thread'e gönder
+      const channelData = input[0];
       this.port.postMessage(channelData.slice(0));
     }
     return true;
@@ -17,7 +15,6 @@ class PlayerProcessor extends AudioWorkletProcessor {
     this.queue = [];
     this.port.onmessage = (e) => {
       this.queue.push(e.data);
-      // Kuyruk çok büyürse (ağ gecikmeleri vs.) eski verileri at
       if (this.queue.length > 50) this.queue.shift();
     };
   }
@@ -31,7 +28,6 @@ class PlayerProcessor extends AudioWorkletProcessor {
           channelData[i] = chunk[i];
         }
       } else {
-        // Kuyruk boşsa sessizlik üret
         for (let i = 0; i < channelData.length; i++) channelData[i] = 0;
       }
     }
