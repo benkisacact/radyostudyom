@@ -96,9 +96,18 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
 <div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"></div>
 <div id="modeCards" class="grid grid-cols-2 gap-3 mb-6">
-    <!-- Mevcut Yayıncı ve Dinleyici kartların burada duruyor -->
+    <div class="mode-card" data-m="broadcaster" tabindex="0" role="button">
+        <div class="ic"><i class="fas fa-microphone"></i></div>
+        <div class="font-display text-xs font-bold tracking-wider">YAYINCI</div>
+        <div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div>
+    </div>
+    <div class="mode-card" data-m="listener" tabindex="0" role="button">
+        <div class="ic"><i class="fas fa-headphones"></i></div>
+        <div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div>
+        <div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div>
+    </div>
 </div>
-<!-- BU SATIRI EKLE -->
+<!-- PIN Input Alanı -->
 <input id="iPin" class="inp hidden" type="password" placeholder="Yayıncı PIN" maxlength="10">
 <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
 <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
@@ -280,18 +289,16 @@ var themes={kirmizi:{accent:'#ff2d55',warm:'#ff9500'},mavi:{accent:'#4d96ff',war
 function setTheme(n){var t=themes[n];if(!t)return;document.documentElement.style.setProperty('--accent',t.accent);document.documentElement.style.setProperty('--warm',t.warm);document.querySelectorAll('.theme-dot').forEach(function(d){d.classList.toggle('act',d.dataset.t===n);});try{localStorage.setItem('radio-theme',n);}catch(e){}}
 function initTheme(){var t;try{t=localStorage.getItem('radio-theme');}catch(e){}if(t&&themes[t])setTheme(t);}
 
-/* YAYINCI GORUNUM KONTROLU - Artık PIN sistemi aktif olduğu için karta herkes görebilir, yayına sadece PIN ile başlanabilir */
-// if(!location.search.includes('dj=1')){document.querySelectorAll('.mode-card').forEach(function(c){if(c.dataset.m==='broadcaster')c.classList.add('hide-bc');});}
-
+/* YAYINCI GORUNUM KONTROLU KALDIRILDI - PIN SİSTEMİ AKTİF */
 function initLogin(){
-    var cards = document.querySelectorAll('.mode-card'), // not(.hide-bc) kısımlarını sildim, artık helesi görünmeli
+    var cards = document.querySelectorAll('.mode-card'), 
         btn = $('btnGo'), 
         pinInp = $('iPin');
         
     var check = function(){
         var isValid = $('iStation').value.trim() && $('iNick').value.trim() && S.mode;
         if(S.mode === 'broadcaster') {
-            isValid = isValid && pinInp.value.trim(); // Yayıncı ise PIN de şart
+            isValid = isValid && pinInp.value.trim(); 
         }
         btn.disabled = !isValid;
     };
@@ -302,7 +309,6 @@ function initLogin(){
             c.classList.add('sel'); 
             S.mode = c.dataset.m; 
             check();
-            // Yayıncı seçilince PIN inputunu göster, değilse gizle
             if(S.mode === 'broadcaster') {
                 pinInp.classList.remove('hidden');
             } else {
@@ -317,7 +323,7 @@ function initLogin(){
     
     $('iStation').addEventListener('input', check);
     $('iNick').addEventListener('input', check);
-    pinInp.addEventListener('input', check); // PIN yazınca butonu aktif et
+    pinInp.addEventListener('input', check); 
 
     btn.addEventListener('click', function(){
         if(btn.disabled) return;
