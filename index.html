@@ -60,12 +60,14 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .pl-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent}
 .pl-item:hover{background:rgba(255,255,255,.04)}.pl-item.playing{background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.2)}
 .pl-idx{font-size:11px;color:var(--muted);min-width:20px;text-align:center}.pl-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pl-dur{font-size:11px;color:var(--muted);min-width:36px;text-align:right}.pl-del{color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s}.pl-del:hover{color:#ff1744}
+.pl-dur{font-size:11px;color:var(--muted);min-width:36px;text-align:right}
+.pl-edit{color:var(--muted);cursor:pointer;font-size:11px;padding:2px 4px;transition:color .15s}.pl-edit:hover{color:var(--accent)}
+.pl-del{color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s}.pl-del:hover{color:#ff1744}
 .fx-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02);position:relative}
 .fx-btn:hover{border-color:var(--accent);background:rgba(255,45,85,.06);transform:scale(1.05)}.fx-btn:active{transform:scale(.95)}
 .fx-btn.voice-active{border-color:var(--accent);background:rgba(255,45,85,.1);box-shadow:0 0 12px rgba(255,45,85,.15)}
 .fx-icon{font-size:20px;margin-bottom:4px}.fx-name{font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.upload-jingle{position:absolute;top:4px;right:4px;font-size:9px;color:var(--muted);background:transparent;border:none;cursor:pointer;z-index:2}.upload-jingle:hover{color:var(--accent)}
+.upload-fx-btn{position:absolute;top:4px;right:4px;font-size:9px;color:var(--muted);background:transparent;border:none;cursor:pointer;z-index:2}.upload-fx-btn:hover{color:var(--accent)}
 .req-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:6px}
 .sch-table{width:100%;border-collapse:collapse;font-size:12px}.sch-table th{text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-size:11px}
 .sch-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04)}.sch-table tr.current-row{background:rgba(255,45,85,.08)}.sch-table tr.current-row td{color:var(--accent);font-weight:600}
@@ -176,35 +178,70 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-music mr-1"></i>JINGLELER</div>
 <div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
     <div class="fx-btn" data-fx="jingle-short">
-        <button class="upload-jingle" data-fx="jingle-short"><i class="fas fa-folder-plus"></i></button>
+        <button class="upload-fx-btn" data-fx="jingle-short"><i class="fas fa-folder-plus"></i></button>
         <div class="fx-icon" style="color:#ff2d55"><i class="fas fa-compact-disc"></i></div>
-        <div class="fx-name" id="jingle-name-short">Kisa</div>
+        <div class="fx-name" id="fx-name-jingle-short">Kisa</div>
     </div>
     <div class="fx-btn" data-fx="jingle-mid">
-        <button class="upload-jingle" data-fx="jingle-mid"><i class="fas fa-folder-plus"></i></button>
+        <button class="upload-fx-btn" data-fx="jingle-mid"><i class="fas fa-folder-plus"></i></button>
         <div class="fx-icon" style="color:#4d96ff"><i class="fas fa-compact-disc"></i></div>
-        <div class="fx-name" id="jingle-name-mid">Orta</div>
+        <div class="fx-name" id="fx-name-jingle-mid">Orta</div>
     </div>
     <div class="fx-btn" data-fx="jingle-long">
-        <button class="upload-jingle" data-fx="jingle-long"><i class="fas fa-folder-plus"></i></button>
+        <button class="upload-fx-btn" data-fx="jingle-long"><i class="fas fa-folder-plus"></i></button>
         <div class="fx-icon" style="color:#ffd93d"><i class="fas fa-compact-disc"></i></div>
-        <div class="fx-name" id="jingle-name-long">Uzun</div>
+        <div class="fx-name" id="fx-name-jingle-long">Uzun</div>
     </div>
 </div>
+
 <div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-volume-up mr-1"></i>SES EFEKTLERI</div>
 <div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
-<div class="fx-btn" data-fx="laugh"><div class="fx-icon" style="color:#ff9500"><i class="fas fa-face-laugh"></i></div><div class="fx-name">Kahkaha</div></div>
-<div class="fx-btn" data-fx="clap"><div class="fx-icon" style="color:#00e676"><i class="fas fa-hand"></i></div><div class="fx-name">Alkis</div></div>
-<div class="fx-btn" data-fx="horn"><div class="fx-icon" style="color:#ff1744"><i class="fas fa-bullhorn"></i></div><div class="fx-name">Horn</div></div>
-<div class="fx-btn" data-fx="cheer"><div class="fx-icon" style="color:#cc5de8"><i class="fas fa-users"></i></div><div class="fx-name">Tezahurat</div></div>
+    <div class="fx-btn" data-fx="gulme-1">
+        <button class="upload-fx-btn" data-fx="gulme-1"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#ff9500"><i class="fas fa-face-laugh"></i></div>
+        <div class="fx-name" id="fx-name-gulme-1">GÜLME 1</div>
+    </div>
+    <div class="fx-btn" data-fx="gulme-2">
+        <button class="upload-fx-btn" data-fx="gulme-2"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#00e676"><i class="fas fa-hand"></i></div>
+        <div class="fx-name" id="fx-name-gulme-2">GÜLME 2</div>
+    </div>
+    <div class="fx-btn" data-fx="kahkaha-1">
+        <button class="upload-fx-btn" data-fx="kahkaha-1"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#ff1744"><i class="fas fa-bullhorn"></i></div>
+        <div class="fx-name" id="fx-name-kahkaha-1">KAHKAHA 1</div>
+    </div>
+    <div class="fx-btn" data-fx="kahkaha-2">
+        <button class="upload-fx-btn" data-fx="kahkaha-2"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#cc5de8"><i class="fas fa-users"></i></div>
+        <div class="fx-name" id="fx-name-kahkaha-2">KAHKAHA 2</div>
+    </div>
 </div>
+
 <div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-leaf mr-1"></i>DOGA SESLERI</div>
 <div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
-<div class="fx-btn" data-fx="rain"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-cloud-rain"></i></div><div class="fx-name">Yagmur</div></div>
-<div class="fx-btn" data-fx="thunder"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-bolt"></i></div><div class="fx-name">Gokgurultusu</div></div>
-<div class="fx-btn" data-fx="birds"><div class="fx-icon" style="color:#00e676"><i class="fas fa-dove"></i></div><div class="fx-name">Kuslar</div></div>
-<div class="fx-btn" data-fx="ocean"><div class="fx-icon" style="color:#00b4d8"><i class="fas fa-water"></i></div><div class="fx-name">Okyanus</div></div>
+    <div class="fx-btn" data-fx="alkis-1">
+        <button class="upload-fx-btn" data-fx="alkis-1"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#4d96ff"><i class="fas fa-cloud-rain"></i></div>
+        <div class="fx-name" id="fx-name-alkis-1">ALKIŞ 1</div>
+    </div>
+    <div class="fx-btn" data-fx="alkis-2">
+        <button class="upload-fx-btn" data-fx="alkis-2"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#ffd93d"><i class="fas fa-bolt"></i></div>
+        <div class="fx-name" id="fx-name-alkis-2">ALKIŞ 2</div>
+    </div>
+    <div class="fx-btn" data-fx="alkis-3">
+        <button class="upload-fx-btn" data-fx="alkis-3"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#00e676"><i class="fas fa-dove"></i></div>
+        <div class="fx-name" id="fx-name-alkis-3">ALKIŞ 3</div>
+    </div>
+    <div class="fx-btn" data-fx="alkis-4">
+        <button class="upload-fx-btn" data-fx="alkis-4"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#00b4d8"><i class="fas fa-water"></i></div>
+        <div class="fx-name" id="fx-name-alkis-4">ALKIŞ 4</div>
+    </div>
 </div>
+
 <div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-sliders-h mr-1"></i>SES EFEK AYARI</div>
 <div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
 <div class="fx-btn voice-fx voice-active" data-voice="normal"><div class="fx-icon" style="color:var(--fg)"><i class="fas fa-microphone"></i></div><div class="fx-name">Normal</div></div>
@@ -292,7 +329,7 @@ var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceMod
 var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
-var customJingles = {}; // Yüklenen jingle dosyalarını tutar
+var customSounds = {}; 
 
 const workletCode = `
 class PlaybackProcessor extends AudioWorkletProcessor {
@@ -404,11 +441,26 @@ var dz=$('dropZone'),fi=$('fileInp');
 dz.addEventListener('click',function(){fi.click();});dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag');addFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){addFiles(fi.files);fi.value='';});
  $('plPrev').addEventListener('click',function(){playPl(djCurIdx-1);});$('plPlay').addEventListener('click',toggleDj);$('plNext').addEventListener('click',function(){playPl(djCurIdx+1);});
  $('rngDjVol').addEventListener('input',function(e){$('lblDjVol').textContent=e.target.value+'%';if(bcDjGain)bcDjGain.gain.value=(S.micOn?0.15:1)*parseInt(e.target.value)/100;});
-document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(e){if(e.target.closest('.upload-jingle'))return;playFx(b.dataset.fx);});});
+
+// Çalan şarkı ismini manuel değiştirmeye yarayan olay dinleyicisi
+ $('iSong').addEventListener('change', function(e){
+    if(S.broadcasting){
+        S.song = e.target.value;
+        wsSend({type:'song-update', song: S.song});
+        if(djCurIdx >= 0 && djPlaylist[djCurIdx]) {
+            djPlaylist[djCurIdx].name = S.song; // Listeyi de güncelle
+            renderPl();
+        }
+    }
+});
+ $('iSong').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+});
+
+document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(e){if(e.target.closest('.upload-fx-btn'))return;playFx(b.dataset.fx);});});
 document.querySelectorAll('.voice-fx').forEach(function(b){b.addEventListener('click',function(){setVoiceEffect(b.dataset.voice);});});
 
-// Jingle Yükleme Butonları
-document.querySelectorAll('.upload-jingle').forEach(function(btn){
+document.querySelectorAll('.upload-fx-btn').forEach(function(btn){
     btn.addEventListener('click', function(e){
         e.stopPropagation();
         var fxType = btn.dataset.fx;
@@ -418,9 +470,11 @@ document.querySelectorAll('.upload-jingle').forEach(function(btn){
         inp.onchange = function(ev) {
             var file = ev.target.files[0];
             if (!file) return;
-            customJingles[fxType] = URL.createObjectURL(file);
-            $('jingle-name-' + fxType.split('-')[1]).textContent = file.name.substring(0, 10);
-            toast('Jingle yüklendi: ' + file.name);
+            customSounds[fxType] = URL.createObjectURL(file);
+            if ($('fx-name-' + fxType)) {
+                $('fx-name-' + fxType).textContent = file.name.substring(0, 10);
+            }
+            toast('Ses dosyası yüklendi: ' + file.name);
         };
         inp.click();
     });
@@ -431,7 +485,28 @@ document.querySelectorAll('.upload-jingle').forEach(function(btn){
  $('btnSchAdd').addEventListener('click',addSchRow);$('btnSchSave').addEventListener('click',saveSch);
  $('btnUrlAdd').addEventListener('click',addUrl);$('iUrlAdd').addEventListener('keydown',function(e){if(e.key==='Enter')addUrl();});
 resizeCv($('cvBc'));}
-function addUrl(){var url=$('iUrlAdd').value.trim();if(!url)return;var name=url.split('/').pop().split('?')[0]||'Online Parca';if(!name.endsWith('.mp3')&&!name.endsWith('.wav')&&!name.endsWith('.ogg'))name='Online: '+name;djPlaylist.push({name:name,url:url,duration:0});$('iUrlAdd').value='';renderPl();toast('Link listeye eklendi');}
+
+function formatSongName(rawName){
+    var name = rawName;
+    try { name = decodeURIComponent(rawName); } catch(e) {}
+    name = name.replace(/\.[^/.]+$/, ""); // Uzantıyı sil
+    name = name.replace(/[-_]/g, ' '); // Tire ve alt çizgiyi boşluğa çevir
+    name = name.replace(/\s+/g, ' ').trim(); // Fazla boşlukları sil
+    if(!name) name = 'Online Parca';
+    return name.split(' ').map(function(w){return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();}).join(' '); // İlk harfleri büyüt
+}
+
+function addUrl(){
+    var url=$('iUrlAdd').value.trim();
+    if(!url)return;
+    var rawName=url.split('/').pop().split('?')[0]||'Online Parca';
+    var name = formatSongName(rawName);
+    djPlaylist.push({name:name,url:url,duration:0});
+    $('iUrlAdd').value='';
+    renderPl();
+    toast('Link listeye eklendi');
+}
+
 function toggleBc(){
 if(S.broadcasting){stopBc();return;}
 var devId=$('selMic').value;var cons=(devId&&devId!=='')?{audio:{deviceId:{exact:devId}}}:{audio:true};
@@ -483,35 +558,36 @@ if(bcRafId){cancelAnimationFrame(bcRafId);bcRafId=null;}
 wsSend({type:'broadcast-stop'});addSys('Yayin sona erdi');toast('Yayin durduruldu');}
 function toggleMic(){if(!S.broadcasting)return;S.micOn=!S.micOn;if(S.micOn){bcGain.gain.value=parseInt($('rngGain').value)/100;if(bcDjGain)bcDjGain.gain.value=0.15*parseInt($('rngDjVol').value)/100;$('btnMic').innerHTML='<i class="fas fa-microphone mr-1"></i>MIC ACIK';$('btnMic').classList.add('stop');}else{bcGain.gain.value=0;if(bcDjGain)bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;$('btnMic').innerHTML='<i class="fas fa-microphone-slash mr-1"></i>MIC KAPALI';$('btnMic').classList.remove('stop');}}
 function addFiles(files){for(var i=0;i<files.length;i++){if(!files[i].type.startsWith('audio/'))continue;var url=URL.createObjectURL(files[i]);var name=files[i].name.replace(/\.[^.]+$/,'');djPlaylist.push({name:name,url:url,duration:0});(function(idx){var a=new Audio();a.src=djPlaylist[idx].url;a.addEventListener('loadedmetadata',function(){djPlaylist[idx].duration=a.duration;renderPl();});})(djPlaylist.length-1);}renderPl();toast(djPlaylist.length+' parca eklendi');}
-function renderPl(){var c=$('plList'),e=$('plEmpty');if(!djPlaylist.length){c.innerHTML='';e.classList.remove('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=true;return;}e.classList.add('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=!S.broadcasting;var h='';for(var i=0;i<djPlaylist.length;i++){var p=djPlaylist[i],a=i===djCurIdx;h+='<div class="pl-item'+(a?' playing':'')+'" data-idx="'+i+'"><span class="pl-idx">'+(a?'<i class="fas fa-volume-up" style="color:var(--accent);font-size:10px"></i>':(i+1))+'</span><span class="pl-name">'+esc(p.name)+'</span><span class="pl-dur">'+(p.duration>0?fmtM(p.duration):'--:--')+'</span><span class="pl-del" data-del="'+i+'"><i class="fas fa-times"></i></span></div>';}c.innerHTML=h;c.querySelectorAll('.pl-item').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('.pl-del'))return;playPl(parseInt(el.dataset.idx));});});c.querySelectorAll('.pl-del').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var idx=parseInt(el.dataset.del);if(idx===djCurIdx){djAudio.pause();djPlaying=false;djCurIdx=-1;}else if(idx<djCurIdx)djCurIdx--;URL.revokeObjectURL(djPlaylist[idx].url);djPlaylist.splice(idx,1);renderPl();});});$('djNow').textContent=djCurIdx>=0&&djCurIdx<djPlaylist.length?'Calan: '+djPlaylist[djCurIdx].name:'';}
+function renderPl(){var c=$('plList'),e=$('plEmpty');if(!djPlaylist.length){c.innerHTML='';e.classList.remove('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=true;return;}e.classList.add('hidden');$('plPrev').disabled=$('plPlay').disabled=$('plNext').disabled=!S.broadcasting;var h='';for(var i=0;i<djPlaylist.length;i++){var p=djPlaylist[i],a=i===djCurIdx;h+='<div class="pl-item'+(a?' playing':'')+'" data-idx="'+i+'"><span class="pl-idx">'+(a?'<i class="fas fa-volume-up" style="color:var(--accent);font-size:10px"></i>':(i+1))+'</span><span class="pl-name">'+esc(p.name)+'</span><span class="pl-dur">'+(p.duration>0?fmtM(p.duration):'--:--')+'</span><span class="pl-edit" data-edit="'+i+'" title="İsmi Düzenle"><i class="fas fa-pen"></i></span><span class="pl-del" data-del="'+i+'"><i class="fas fa-times"></i></span></div>';}c.innerHTML=h;c.querySelectorAll('.pl-item').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('.pl-del')||e.target.closest('.pl-edit'))return;playPl(parseInt(el.dataset.idx));});});
+// İsim düzenleme butonu olay dinleyicisi
+c.querySelectorAll('.pl-edit').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var idx=parseInt(el.dataset.edit);var newName=prompt('Şarkı adını düzenle:',djPlaylist[idx].name);if(newName!==null&&newName.trim()!==''){djPlaylist[idx].name=newName.trim();if(idx===djCurIdx){S.song=newName.trim();$('iSong').value=S.song;wsSend({type:'song-update',song:S.song});}renderPl();}});});
+c.querySelectorAll('.pl-del').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var idx=parseInt(el.dataset.del);if(idx===djCurIdx){djAudio.pause();djPlaying=false;djCurIdx=-1;}else if(idx<djCurIdx)djCurIdx--;URL.revokeObjectURL(djPlaylist[idx].url);djPlaylist.splice(idx,1);renderPl();});});$('djNow').textContent=djCurIdx>=0&&djCurIdx<djPlaylist.length?'Calan: '+djPlaylist[djCurIdx].name:'';}
 function playPl(idx){if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length)return;djCurIdx=idx;djAudio.src=djPlaylist[idx].url;djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';renderPl();S.song=djPlaylist[idx].name;$('iSong').value=S.song;wsSend({type:'song-update',song:S.song});}
 function toggleDj(){if(!S.broadcasting)return;if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';wsSend({type:'song-update',song:''});}else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';S.song=djPlaylist[djCurIdx].name;wsSend({type:'song-update',song:S.song});}else if(djPlaylist.length)playPl(0);}
 function setVoiceEffect(fx){voiceEffect=fx;voiceFilter.type='allpass';voiceDelay.delayTime.value=0;voiceDelayFb.gain.value=0;try{voiceModOsc.disconnect();}catch(e){}voiceModGain.gain.value=1.0;switch(fx){case'normal':break;case'telefon':voiceFilter.type='highpass';voiceFilter.frequency.value=1200;voiceFilter.Q.value=1;break;case'radyo':voiceFilter.type='lowpass';voiceFilter.frequency.value=2500;voiceFilter.Q.value=5;break;case'robot':voiceModOsc.connect(voiceModGain.gain);voiceModOsc.frequency.value=150;break;case'yanki':voiceDelay.delayTime.value=.25;voiceDelayFb.gain.value=.4;break;case'derin':voiceFilter.type='lowpass';voiceFilter.frequency.value=800;voiceFilter.Q.value=2;break;}document.querySelectorAll('.voice-fx').forEach(function(b){b.classList.toggle('voice-active',b.dataset.voice===fx);});toast('Ses efekti: '+fx);}
 function mkNoise(dur){var sr=bcAudioCtx.sampleRate,len=Math.floor(sr*dur),buf=bcAudioCtx.createBuffer(1,len,sr),d=buf.getChannelData(0);for(var i=0;i<len;i++)d[i]=Math.random()*2-1;return buf;}
 function playFx(type){if(!bcAudioCtx||!bcFxGain)return;
-    
-    // Özel yüklenmiş jingle varsa onu çal
-    if(type.startsWith('jingle-') && customJingles[type]) {
-        var a = new Audio(customJingles[type]);
+    if(customSounds[type]) {
+        var a = new Audio(customSounds[type]);
         var src = bcAudioCtx.createMediaElementSource(a);
         src.connect(bcFxGain);
         a.onended = function() { try { src.disconnect(); } catch(e){} };
         a.play();
         return;
     }
-
     var t=bcAudioCtx.currentTime;
-if(type==='jingle-short')mkOsc(t,[523.25,659.25,783.99],[0,.15,.3],[.35,.35,.5],.6);
-else if(type==='jingle-mid')mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.2,.4,.6],[.3,.3,.3,.5],1);
-else if(type==='jingle-long'){mkOsc(t,[261.63,329.63,392,466.16,523.25,659.25],[0,.4,.8,1.2,1.6,2],[.3,.3,.3,.3,.3,.5],1.5);var bs=bcAudioCtx.createOscillator();bs.type='sine';bs.frequency.value=130.81;var bg=bcAudioCtx.createGain();bg.gain.setValueAtTime(.2,t);bg.gain.exponentialRampToValueAtTime(.001,t+3.5);bs.connect(bg);bg.connect(bcFxGain);bs.start(t);bs.stop(t+3.5);}
-else if(type==='laugh'){for(var i=0;i<6;i++){var st=t+i*.2,src=bcAudioCtx.createBufferSource();src.buffer=mkNoise(.12);var bp=bcAudioCtx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1500+Math.random()*500;bp.Q.value=2;var g=bcAudioCtx.createGain();g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.25,st+.02);g.gain.exponentialRampToValueAtTime(.001,st+.1);src.connect(bp);bp.connect(g);g.connect(bcFxGain);src.start(st);src.stop(st+.12);}}
-else if(type==='clap'){for(var j=0;j<8;j++){var ct=t+j*.08+Math.random()*.03,cs=bcAudioCtx.createBufferSource();cs.buffer=mkNoise(.05);var hp=bcAudioCtx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1000;var cg=bcAudioCtx.createGain();cg.gain.setValueAtTime(0,ct);cg.gain.linearRampToValueAtTime(.3,ct+.005);cg.gain.exponentialRampToValueAtTime(.001,ct+.04);cs.connect(hp);hp.connect(cg);cg.connect(bcFxGain);cs.start(ct);cs.stop(ct+.05);}}
-else if(type==='horn'){var hd=1.5,h1=bcAudioCtx.createOscillator();h1.type='square';h1.frequency.value=350;var h2=bcAudioCtx.createOscillator();h2.type='square';h2.frequency.value=440;var hg=bcAudioCtx.createGain();hg.gain.setValueAtTime(0,t);hg.gain.linearRampToValueAtTime(.2,t+.05);hg.gain.setValueAtTime(.2,t+hd-.1);hg.gain.linearRampToValueAtTime(0,t+hd);h1.connect(hg);h2.connect(hg);hg.connect(bcFxGain);h1.start(t);h1.stop(t+hd);h2.start(t);h2.stop(t+hd);}
-else if(type==='cheer'){var cd=3,csrc=bcAudioCtx.createBufferSource();csrc.buffer=mkNoise(cd);var cbp=bcAudioCtx.createBiquadFilter();cbp.type='bandpass';cbp.frequency.value=2000;cbp.Q.value=.5;var clfo=bcAudioCtx.createOscillator();clfo.frequency.value=8;var clg=bcAudioCtx.createGain();clg.gain.value=.08;clfo.connect(clg);var cgg=bcAudioCtx.createGain();cgg.gain.setValueAtTime(0,t);cgg.gain.linearRampToValueAtTime(.2,t+.3);cgg.gain.setValueAtTime(.2,t+cd-.3);cgg.gain.linearRampToValueAtTime(0,t+cd);clg.connect(cgg.gain);clfo.start(t);clfo.stop(t+cd);csrc.connect(cbp);cbp.connect(cgg);cgg.connect(bcFxGain);csrc.start(t);csrc.stop(t+cd);}
-else if(type==='rain'){var rd=4,rs=bcAudioCtx.createBufferSource();rs.buffer=mkNoise(rd);var rbp=bcAudioCtx.createBiquadFilter();rbp.type='bandpass';rbp.frequency.value=3000;rbp.Q.value=.5;var rg=bcAudioCtx.createGain();rg.gain.setValueAtTime(0,t);rg.gain.linearRampToValueAtTime(.15,t+.3);rg.gain.setValueAtTime(.15,t+rd-.3);rg.gain.linearRampToValueAtTime(0,t+rd);rs.connect(rbp);rbp.connect(rg);rg.connect(bcFxGain);rs.start(t);rs.stop(t+rd);}
-else if(type==='thunder'){var td=3,ts=bcAudioCtx.createBufferSource();ts.buffer=mkNoise(td);var tlp=bcAudioCtx.createBiquadFilter();tlp.type='lowpass';tlp.frequency.value=200;var tg=bcAudioCtx.createGain();tg.gain.setValueAtTime(0,t);tg.gain.linearRampToValueAtTime(.5,t+.05);tg.gain.exponentialRampToValueAtTime(.1,t+.5);tg.gain.exponentialRampToValueAtTime(.001,t+td);ts.connect(tlp);tlp.connect(tg);tg.connect(bcFxGain);ts.start(t);ts.stop(t+td);}
-else if(type==='birds'){var bn=8+Math.floor(Math.random()*5);for(var k=0;k<bn;k++){var bt=t+Math.random()*3.5,bf=2000+Math.random()*3000,bd=.05+Math.random()*.15,bo=bcAudioCtx.createOscillator();bo.type='sine';bo.frequency.setValueAtTime(bf,bt);bo.frequency.linearRampToValueAtTime(bf*(.8+Math.random()*.4),bt+bd);var bg2=bcAudioCtx.createGain();bg2.gain.setValueAtTime(0,bt);bg2.gain.linearRampToValueAtTime(.12,bt+.01);bg2.gain.exponentialRampToValueAtTime(.001,bt+bd);bo.connect(bg2);bg2.connect(bcFxGain);bo.start(bt);bo.stop(bt+bd+.05);}}
-else if(type==='ocean'){var od=4,os=bcAudioCtx.createBufferSource();os.buffer=mkNoise(od);var olp=bcAudioCtx.createBiquadFilter();olp.type='lowpass';olp.frequency.value=500;olp.Q.value=5;var olfo=bcAudioCtx.createOscillator();olfo.frequency.value=.3;var olg=bcAudioCtx.createGain();olg.gain.value=400;olfo.connect(olg);olg.connect(olp.frequency);var og=bcAudioCtx.createGain();og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.2,t+.5);og.gain.setValueAtTime(.2,t+od-.5);og.gain.linearRampToValueAtTime(0,t+od);olfo.start(t);olfo.stop(t+od);os.connect(olp);olp.connect(og);og.connect(bcFxGain);os.start(t);os.stop(t+od);}}
+    if(type==='jingle-short'||type==='jingle-short') mkOsc(t,[523.25,659.25,783.99],[0,.15,.3],[.35,.35,.5],.6);
+    else if(type==='jingle-mid') mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.2,.4,.6],[.3,.3,.3,.5],1);
+    else if(type==='jingle-long'){mkOsc(t,[261.63,329.63,392,466.16,523.25,659.25],[0,.4,.8,1.2,1.6,2],[.3,.3,.3,.3,.3,.5],1.5);var bs=bcAudioCtx.createOscillator();bs.type='sine';bs.frequency.value=130.81;var bg=bcAudioCtx.createGain();bg.gain.setValueAtTime(.2,t);bg.gain.exponentialRampToValueAtTime(.001,t+3.5);bs.connect(bg);bg.connect(bcFxGain);bs.start(t);bs.stop(t+3.5);}
+    else if(type==='gulme-1'||type==='laugh'){for(var i=0;i<6;i++){var st=t+i*.2,src=bcAudioCtx.createBufferSource();src.buffer=mkNoise(.12);var bp=bcAudioCtx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1500+Math.random()*500;bp.Q.value=2;var g=bcAudioCtx.createGain();g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.25,st+.02);g.gain.exponentialRampToValueAtTime(.001,st+.1);src.connect(bp);bp.connect(g);g.connect(bcFxGain);src.start(st);src.stop(st+.12);}}
+    else if(type==='gulme-2'||type==='clap'){for(var j=0;j<8;j++){var ct=t+j*.08+Math.random()*.03,cs=bcAudioCtx.createBufferSource();cs.buffer=mkNoise(.05);var hp=bcAudioCtx.createBiquadFilter();hp.type='highpass';hp.frequency.value=1000;var cg=bcAudioCtx.createGain();cg.gain.setValueAtTime(0,ct);cg.gain.linearRampToValueAtTime(.3,ct+.005);cg.gain.exponentialRampToValueAtTime(.001,ct+.04);cs.connect(hp);hp.connect(cg);cg.connect(bcFxGain);cs.start(ct);cs.stop(ct+.05);}}
+    else if(type==='kahkaha-1'||type==='horn'){var hd=1.5,h1=bcAudioCtx.createOscillator();h1.type='square';h1.frequency.value=350;var h2=bcAudioCtx.createOscillator();h2.type='square';h2.frequency.value=440;var hg=bcAudioCtx.createGain();hg.gain.setValueAtTime(0,t);hg.gain.linearRampToValueAtTime(.2,t+.05);hg.gain.setValueAtTime(.2,t+hd-.1);hg.gain.linearRampToValueAtTime(0,t+hd);h1.connect(hg);h2.connect(hg);hg.connect(bcFxGain);h1.start(t);h1.stop(t+hd);h2.start(t);h2.stop(t+hd);}
+    else if(type==='kahkaha-2'||type==='cheer'){var cd=3,csrc=bcAudioCtx.createBufferSource();csrc.buffer=mkNoise(cd);var cbp=bcAudioCtx.createBiquadFilter();cbp.type='bandpass';cbp.frequency.value=2000;cbp.Q.value=.5;var clfo=bcAudioCtx.createOscillator();clfo.frequency.value=8;var clg=bcAudioCtx.createGain();clg.gain.value=.08;clfo.connect(clg);var cgg=bcAudioCtx.createGain();cgg.gain.setValueAtTime(0,t);cgg.gain.linearRampToValueAtTime(.2,t+.3);cgg.gain.setValueAtTime(.2,t+cd-.3);cgg.gain.linearRampToValueAtTime(0,t+cd);clg.connect(cgg.gain);clfo.start(t);clfo.stop(t+cd);csrc.connect(cbp);cbp.connect(cgg);cgg.connect(bcFxGain);csrc.start(t);csrc.stop(t+cd);}
+    else if(type==='alkis-1'||type==='rain'){var rd=4,rs=bcAudioCtx.createBufferSource();rs.buffer=mkNoise(rd);var rbp=bcAudioCtx.createBiquadFilter();rbp.type='bandpass';rbp.frequency.value=3000;rbp.Q.value=.5;var rg=bcAudioCtx.createGain();rg.gain.setValueAtTime(0,t);rg.gain.linearRampToValueAtTime(.15,t+.3);rg.gain.setValueAtTime(.15,t+rd-.3);rg.gain.linearRampToValueAtTime(0,t+rd);rs.connect(rbp);rbp.connect(rg);rg.connect(bcFxGain);rs.start(t);rs.stop(t+rd);}
+    else if(type==='alkis-2'||type==='thunder'){var td=3,ts=bcAudioCtx.createBufferSource();ts.buffer=mkNoise(td);var tlp=bcAudioCtx.createBiquadFilter();tlp.type='lowpass';tlp.frequency.value=200;var tg=bcAudioCtx.createGain();tg.gain.setValueAtTime(0,t);tg.gain.linearRampToValueAtTime(.5,t+.05);tg.gain.exponentialRampToValueAtTime(.1,t+.5);tg.gain.exponentialRampToValueAtTime(.001,t+td);ts.connect(tlp);tlp.connect(tg);tg.connect(bcFxGain);ts.start(t);ts.stop(t+td);}
+    else if(type==='alkis-3'||type==='birds'){var bn=8+Math.floor(Math.random()*5);for(var k=0;k<bn;k++){var bt=t+Math.random()*3.5,bf=2000+Math.random()*3000,bd=.05+Math.random()*.15,bo=bcAudioCtx.createOscillator();bo.type='sine';bo.frequency.setValueAtTime(bf,bt);bo.frequency.linearRampToValueAtTime(bf*(.8+Math.random()*.4),bt+bd);var bg2=bcAudioCtx.createGain();bg2.gain.setValueAtTime(0,bt);bg2.gain.linearRampToValueAtTime(.12,bt+.01);bg2.gain.exponentialRampToValueAtTime(.001,bt+bd);bo.connect(bg2);bg2.connect(bcFxGain);bo.start(bt);bo.stop(bt+bd+.05);}}
+    else if(type==='alkis-4'||type==='ocean'){var od=4,os=bcAudioCtx.createBufferSource();os.buffer=mkNoise(od);var olp=bcAudioCtx.createBiquadFilter();olp.type='lowpass';olp.frequency.value=500;olp.Q.value=5;var olfo=bcAudioCtx.createOscillator();olfo.frequency.value=.3;var olg=bcAudioCtx.createGain();olg.gain.value=400;olfo.connect(olg);olg.connect(olp.frequency);var og=bcAudioCtx.createGain();og.gain.setValueAtTime(0,t);og.gain.linearRampToValueAtTime(.2,t+.5);og.gain.setValueAtTime(.2,t+od-.5);og.gain.linearRampToValueAtTime(0,t+od);olfo.start(t);olfo.stop(t+od);os.connect(olp);olp.connect(og);og.connect(bcFxGain);os.start(t);os.stop(t+od);}
+}
 function mkOsc(t,freqs,dels,vols,dur){for(var i=0;i<freqs.length;i++){var o=bcAudioCtx.createOscillator(),g=bcAudioCtx.createGain();o.type='sine';o.frequency.value=freqs[i];g.gain.setValueAtTime(0,t+dels[i]);g.gain.linearRampToValueAtTime(vols[i],t+dels[i]+.02);g.gain.exponentialRampToValueAtTime(.001,t+dels[i]+dur);o.connect(g);g.connect(bcFxGain);o.start(t+dels[i]);o.stop(t+dels[i]+dur+.05);}}
 function toggleRec(){if(!S.broadcasting||!bcStreamDest)return;if(!S.recording)startRec();else stopRecInt();}
 function startRec(){bcRecChunks=[];bcRecorder=new MediaRecorder(bcStreamDest.stream,{mimeType:'audio/webm'});bcRecorder.ondataavailable=function(e){if(e.data.size>0)bcRecChunks.push(e.data);};bcRecorder.onstop=function(){$('btnRecDl').classList.remove('hidden');};bcRecorder.start();S.recording=true;$('btnRec').innerHTML='<i class="fas fa-stop mr-1"></i>KAYIT DURDUR';$('btnRec').classList.remove('btn-red');$('btnRec').classList.add('stop');$('recInd').classList.remove('hidden');toast('Kayit basladi');}
