@@ -87,21 +87,32 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <body class="bg-atm">
 <div id="toast" class="toast-el" role="alert" aria-live="polite"></div>
 <div id="cov" class="cov"></div>
+
+<!-- Login Screen -->
 <section id="login" class="fixed inset-0 flex items-center justify-center z-50 px-4">
 <div class="vinyl login-bg" aria-hidden="true"><div class="vinyl-lbl" style="width:120px;height:120px;font-size:11px">RADIO<br>STUDIO</div><div class="vinyl-hole" style="width:16px;height:16px"></div></div>
 <div class="float-orb" style="width:6px;height:6px;background:var(--accent);opacity:.2;top:18%;left:12%" aria-hidden="true"></div>
 <div class="float-orb" style="width:4px;height:4px;background:var(--warm);opacity:.15;top:72%;left:22%;animation-delay:-3s" aria-hidden="true"></div>
+
 <div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
-<h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
-<p class="text-center text-sm mb-7" style="color:var(--muted)">Profesyonel DJ Mixer v2</p>
-<div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"><input id="iPin" class="inp" type="password" placeholder="Yayinci PIN (Sadece yayincilar)" maxlength="10" style="display:none;"></div>
-<div class="grid grid-cols-2 gap-3 mb-6">
-<div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
-<div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
-</div>
-<button id="btnGo" class="btn w-full" disabled>YAYINA BASLA</button>
+    
+    <!-- Logo Eklendi -->
+    <div class="flex justify-center mb-4">
+        <img src="https://z-cdn-media.chatglm.cn/files/63708ddc-b0dd-4942-bfe1-076116c9c2ed.png?auth_key=1884486179-0aa65ddb377344398210fee4e6feacf0-0-9a593771f0a4c3e44c25b1dda37c41fa" alt="Radyo Logo" class="w-28 h-28 rounded-full object-cover" style="border:2px solid var(--accent);box-shadow:0 0 15px rgba(255,45,85,.2)">
+    </div>
+    
+    <h1 class="font-display text-center text-xl font-black tracking-widest mb-1" style="color:var(--accent)">RADYO STÜDYOSU</h1>
+    <p class="text-center text-sm mb-7" style="color:var(--muted)">Canlı Yayına Hoş Geldiniz</p>
+    
+    <div class="space-y-3 mb-6"><input id="iStation" class="inp" placeholder="Radyo adi" maxlength="30"><input id="iNick" class="inp" placeholder="Rumuzunuz" maxlength="20"><input id="iPin" class="inp" type="password" placeholder="Yayinci PIN (Sadece yayincilar)" maxlength="10" style="display:none;"></div>
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="mode-card" data-m="broadcaster" tabindex="0" role="button"><div class="ic"><i class="fas fa-microphone"></i></div><div class="font-display text-xs font-bold tracking-wider">YAYINCI</div><div class="text-xs mt-1" style="color:var(--muted)">DJ Mixer</div></div>
+        <div class="mode-card" data-m="listener" tabindex="0" role="button"><div class="ic"><i class="fas fa-headphones"></i></div><div class="font-display text-xs font-bold tracking-wider">DINLEYICI</div><div class="text-xs mt-1" style="color:var(--muted)">Yayini dinle</div></div>
+    </div>
+    <button id="btnGo" class="btn w-full" disabled>YAYINA BASLA</button>
 </div></section>
 
+<!-- App Screen -->
 <div id="app" class="hidden flex flex-col h-screen">
 <header id="hdr" class="flex items-center justify-between px-5 py-3 border-b" style="border-color:var(--border);background:var(--surface);min-height:54px">
 <div class="flex items-center gap-3"><div id="connDot" class="conn-dot wait"></div><span id="hdrName" class="font-display text-sm font-bold tracking-wider truncate max-w-[160px]"></span><span id="hdrRole" class="badge hidden"></span></div>
@@ -252,7 +263,14 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="chat-inp"><input id="iChat" class="inp" placeholder="Mesaj yazin..." maxlength="250"><button id="btnChatS" aria-label="Gonder"><i class="fas fa-paper-plane text-sm"></i></button></div>
 </aside></div>
 
-<footer class="flex items-center justify-between px-5 py-2 border-t text-xs" style="border-color:var(--border);background:var(--surface);color:var(--muted);min-height:38px"><span id="fStatus">Hazir</span><span id="fConn">Baglaniyor...</span></footer>
+<!-- Footer Updated -->
+<footer class="flex flex-col items-center justify-center px-5 py-2 border-t text-xs" style="border-color:var(--border);background:var(--surface);color:var(--muted);min-height:38px">
+    <div class="flex items-center justify-between w-full">
+        <span id="fStatus">Hazir</span>
+        <span id="fConn">Baglaniyor...</span>
+    </div>
+    <div class="mt-1 text-center text-[10px] tracking-wide">Profesyonel DJ Mixer v2 &copy; 2026 - Created by Sencer Alemdar</div>
+</footer>
 </div>
 
 <script>
@@ -263,7 +281,6 @@ var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
 
-// AudioWorklet kodu (Dinleyici tarafı için arka planda pürüzsüz ses çalan motor)
 const workletCode = `
 class PlaybackProcessor extends AudioWorkletProcessor {
     constructor() {
@@ -275,7 +292,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
             if (e.data.type === 'chunk') {
                 this.queue.push(e.data.data);
                 if (this.queue.length > 8) {
-                    this.queue.shift(); // Ağ gecikirse eski paketleri at
+                    this.queue.shift();
                 }
             }
         };
@@ -293,7 +310,7 @@ class PlaybackProcessor extends AudioWorkletProcessor {
                     this.offset = 0;
                 } else {
                     for (let i = written; i < needed; i++) {
-                        channel[i] = 0; // Veri yoksa sessizlik (tırtırtı yapmaz)
+                        channel[i] = 0;
                     }
                     break;
                 }
