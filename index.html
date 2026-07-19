@@ -259,10 +259,59 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 var S={mode:null,station:'',nick:'',broadcasting:false,listening:false,micOn:false,song:'',listenerCount:0,bcStart:null,lsStart:null,timerInt:null,broadcastActive:false,bcSampleRate:44100,peak:0,totalJoined:0,schedule:[],recording:false,adRunning:false,adSeconds:0,adInt:null};
 var bcAudioCtx=null,bcAnalyser=null,bcGain=null,bcMixGain=null,bcSrc=null,bcMic=null,bcSendProc=null,bcSilent=null,bcStreamDest=null,bcDjSource=null,bcDjGain=null,bcFxGain=null,bcRecorder=null,bcRecChunks=[],bcFreqData=null,bcRafId=null,bcPeakL=0,bcPeakR=0;
 var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceModGain=null,voiceEffect='normal';
-var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayProc=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0,lsAudioQ=[],LS_MAX_Q=10;
+var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
-function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsAudioCtx&&lsAudioQ.length<LS_MAX_Q){var int16=new Int16Array(e.data);var float32=new Float32Array(int16.length);for(var i=0;i<int16.length;i++){float32[i]=int16[i]/0x8000;}lsAudioQ.push(float32);}}};}
+
+// AudioWorklet kodu (Dinleyici tarafı için arka planda pürüzsüz ses çalan motor)
+const workletCode = `
+class PlaybackProcessor extends AudioWorkletProcessor {
+    constructor() {
+        super();
+        this.queue = [];
+        this.currentChunk = null;
+        this.offset = 0;
+        this.port.onmessage = (e) => {
+            if (e.data.type === 'chunk') {
+                this.queue.push(e.data.data);
+                if (this.queue.length > 8) {
+                    this.queue.shift(); // Ağ gecikirse eski paketleri at
+                }
+            }
+        };
+    }
+    process(inputs, outputs) {
+        const output = outputs[0];
+        const channel = output[0];
+        let needed = channel.length;
+        let written = 0;
+        
+        while (written < needed) {
+            if (!this.currentChunk || this.offset >= this.currentChunk.length) {
+                if (this.queue.length > 0) {
+                    this.currentChunk = this.queue.shift();
+                    this.offset = 0;
+                } else {
+                    for (let i = written; i < needed; i++) {
+                        channel[i] = 0; // Veri yoksa sessizlik (tırtırtı yapmaz)
+                    }
+                    break;
+                }
+            }
+            let toCopy = Math.min(needed - written, this.currentChunk.length - this.offset);
+            for (let i = 0; i < toCopy; i++) {
+                channel[written + i] = this.currentChunk[this.offset + i];
+            }
+            written += toCopy;
+            this.offset += toCopy;
+        }
+        return true;
+    }
+}
+registerProcessor('playback-processor', PlaybackProcessor);
+`;
+
+function wsConnect(){var p=location.protocol==='https:'?'wss:':'ws:';ws=new WebSocket(p+'//'+location.host);ws.binaryType='arraybuffer';setConn('wait');ws.onopen=function(){setConn('ok');$('fConn').textContent='Baglandi';if(S.mode)doJoin();};ws.onclose=function(){setConn('no');$('fConn').textContent='Yeniden baglaniyor...';clearTimeout(wsReconn);wsReconn=setTimeout(wsConnect,3000);};ws.onerror=function(){};ws.onmessage=function(e){if(typeof e.data==='string'){try{handleMsg(JSON.parse(e.data));}catch(err){}}else{if(S.listening&&lsPlayNode){var int16=new Int16Array(e.data);var float32=new Float32Array(int16.length);for(var i=0;i<int16.length;i++){float32[i]=int16[i]/0x8000;}lsPlayNode.port.postMessage({type:'chunk',data:float32},[float32.buffer]);}}};}
 function wsSend(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o));}
 function doJoin(){var pin=S.mode==='broadcaster'?$('iPin').value.trim():'';wsSend({type:'join',station:S.station,nick:S.nick,role:S.mode,sampleRate:S.mode==='broadcaster'?44100:0,pin:pin});}
 function setConn(s){$('connDot').className='conn-dot '+s;}
@@ -354,7 +403,7 @@ bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').valu
 djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
 djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
 bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
-bcSendProc=bcAudioCtx.createScriptProcessor(1024,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1){var float32=e.inputBuffer.getChannelData(0);var int16=new Int16Array(float32.length);for(var i=0;i<float32.length;i++){var s=Math.max(-1,Math.min(1,float32[i]));int16[i]=s<0?s*0x8000:s*0x7FFF;}ws.send(int16.buffer);}};bcMixGain.connect(bcSendProc);
+bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1){if(ws.bufferedAmount>16384)return;var float32=e.inputBuffer.getChannelData(0);var int16=new Int16Array(float32.length);for(var i=0;i<float32.length;i++){var s=Math.max(-1,Math.min(1,float32[i]));int16[i]=s<0?s*0x8000:s*0x7FFF;}ws.send(int16.buffer);}};bcMixGain.connect(bcSendProc);
 bcSilent=bcAudioCtx.createGain();bcSilent.gain.value=0;bcSendProc.connect(bcSilent);bcSilent.connect(bcAudioCtx.destination);
 bcStreamDest=bcAudioCtx.createMediaStreamDestination();bcMixGain.connect(bcStreamDest);
 bcFreqData=new Uint8Array(bcAnalyser.frequencyBinCount);
@@ -413,8 +462,46 @@ function saveSch(){var rows=$('schBody').querySelectorAll('tr'),sch=[];rows.forE
 function renderSch(data,isBc){var tb=isBc?$('schBody'):$('schBodyLs');tb.innerHTML='';if(!data||!data.length){tb.innerHTML='<tr><td colspan="'+(isBc?3:2)+'" class="text-center py-4" style="color:var(--muted)">Program yok</td></tr>';return;}var now=new Date(),nowMin=now.getHours()*60+now.getMinutes();for(var i=0;i<data.length;i++){var p=data[i],pts=p.time.split(':'),min=parseInt(pts[0])*60+parseInt(pts[1]);var isCur=nowMin>=min&&(i===data.length-1||nowMin<parseInt(data[i+1].time.split(':')[0])*60+parseInt(data[i+1].time.split(':')[1]));var tr=document.createElement('tr');if(isCur)tr.className='current-row';tr.innerHTML='<td>'+p.time+'</td><td>'+esc(p.name)+'</td>'+(isBc?'<td></td>':'');tb.appendChild(tr);}}
 function setupLs(){$('btnLs').addEventListener('click',toggleLs);$('rngVol').addEventListener('input',function(){if(lsGain)lsGain.gain.value=parseInt($('rngVol').value)/100;});$('btnReqSend').addEventListener('click',sendReq);$('iReqSong').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();sendReq();}});resizeCv($('cvLs'));}
 function sendReq(){var t=$('iReqSong').value.trim();if(!t||!S.broadcastActive)return;wsSend({type:'request',song:t});$('iReqSong').value='';}
-function toggleLs(){if(S.listening){stopListening();return;}if(!S.broadcastActive)return;lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;lsPlayProc=lsAudioCtx.createScriptProcessor(1024,0,1);lsPlayProc.onaudioprocess=function(e){var out=e.outputBuffer.getChannelData(0);while(lsAudioQ.length>4){lsAudioQ.shift();}if(lsAudioQ.length>0){var ch=lsAudioQ.shift();for(var i=0;i<out.length;i++)out[i]=i<ch.length?ch[i]:0;}else{for(var j=0;j<out.length;j++)out[j]=0;}};lsPlayProc.connect(lsGain);lsGain.connect(lsAnalyser);lsAnalyser.connect(lsAudioCtx.destination);lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);lsAudioQ.length=0;S.listening=true;S.lsStart=Date.now();$('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';$('vinLs').classList.add('spin');S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);vizLs();}
-function stopListening(){S.listening=false;if(lsPlayProc)try{lsPlayProc.disconnect();}catch(e){}lsPlayProc=null;if(lsAudioCtx)lsAudioCtx.close();lsAudioCtx=lsAnalyser=lsGain=null;if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}clearInterval(S.timerInt);lsAudioQ.length=0;$('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';$('vinLs').classList.remove('spin');$('tmLs').textContent='00:00:00';$('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));}
+async function toggleLs(){
+    if(S.listening){stopListening();return;}
+    if(!S.broadcastActive)return;
+    try {
+        lsAudioCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:S.bcSampleRate});
+        const blob = new Blob([workletCode], {type: 'application/javascript'});
+        const url = URL.createObjectURL(blob);
+        await lsAudioCtx.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+        
+        lsAnalyser=lsAudioCtx.createAnalyser();lsAnalyser.fftSize=128;lsAnalyser.smoothingTimeConstant=0.8;
+        lsGain=lsAudioCtx.createGain();lsGain.gain.value=parseInt($('rngVol').value)/100;
+        lsPlayNode = new AudioWorkletNode(lsAudioCtx, 'playback-processor');
+        lsPlayNode.connect(lsGain);
+        lsGain.connect(lsAnalyser);
+        lsAnalyser.connect(lsAudioCtx.destination);
+        
+        lsFreqData=new Uint8Array(lsAnalyser.frequencyBinCount);
+        S.listening=true;S.lsStart=Date.now();
+        $('btnLs').innerHTML='<i class="fas fa-pause mr-2"></i>DURAKLAT';
+        $('vinLs').classList.add('spin');
+        S.timerInt=setInterval(function(){$('tmLs').textContent=fmtT((Date.now()-S.lsStart)/1000);},1000);
+        vizLs();
+    } catch(err) {
+        toast('Ses motoru başlatılamadı: '+err.message);
+    }
+}
+function stopListening(){
+    S.listening=false;
+    if(lsPlayNode)try{lsPlayNode.disconnect();}catch(e){}
+    lsPlayNode=null;
+    if(lsAudioCtx)lsAudioCtx.close();
+    lsAudioCtx=lsAnalyser=lsGain=null;
+    if(lsRafId){cancelAnimationFrame(lsRafId);lsRafId=null;}
+    clearInterval(S.timerInt);
+    $('btnLs').innerHTML='<i class="fas fa-play mr-2"></i>DINLE';
+    $('vinLs').classList.remove('spin');
+    $('tmLs').textContent='00:00:00';
+    $('vuFL2').style.height='0%';$('vuFR2').style.height='0%';$('vuPL2').style.bottom='0%';$('vuPR2').style.bottom='0%';lsPeakL=lsPeakR=0;clearCv($('cvLs'));
+}
 function vizBc(){if(!S.broadcasting||!bcAnalyser)return;bcRafId=requestAnimationFrame(vizBc);bcAnalyser.getByteFrequencyData(bcFreqData);var len=bcFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=bcFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL','vuPL',Math.min(100,(sL/(len/2))*100*(.92+Math.random()*.16)),true);setVU('vuFR','vuPR',Math.min(100,(sR/(len/2))*100*(.92+Math.random()*.16)),false);drawBars($('cvBc'),bcFreqData);}
 function vizLs(){if(!S.listening||!lsAnalyser)return;lsRafId=requestAnimationFrame(vizLs);lsAnalyser.getByteFrequencyData(lsFreqData);var len=lsFreqData.length,sL=0,sR=0;for(var i=0;i<len;i++){var v=lsFreqData[i]/255;if(i<len/2)sL+=v;else sR+=v;}setVU('vuFL2','vuPL2',Math.min(100,(sL/(len/2))*100),true);setVU('vuFR2','vuPR2',Math.min(100,(sR/(len/2))*100),false);drawBars($('cvLs'),lsFreqData);}
 function setVU(fId,pId,v,isL){var f=$(fId),p=$(pId);if(!f||!p)return;var vv=Math.max(0,Math.min(100,v));f.style.height=vv+'%';var pk=isL?lsPeakL:lsPeakR;if(vv>pk)pk=vv;else pk=Math.max(0,pk-.6);if(isL)lsPeakL=pk;else lsPeakR=pk;p.style.bottom=pk+'%';}
