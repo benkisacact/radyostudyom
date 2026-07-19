@@ -61,10 +61,11 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .pl-item:hover{background:rgba(255,255,255,.04)}.pl-item.playing{background:rgba(255,45,85,.08);border-color:rgba(255,45,85,.2)}
 .pl-idx{font-size:11px;color:var(--muted);min-width:20px;text-align:center}.pl-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-dur{font-size:11px;color:var(--muted);min-width:36px;text-align:right}.pl-del{color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;border-radius:4px;transition:color .15s}.pl-del:hover{color:#ff1744}
-.fx-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02)}
+.fx-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.02);position:relative}
 .fx-btn:hover{border-color:var(--accent);background:rgba(255,45,85,.06);transform:scale(1.05)}.fx-btn:active{transform:scale(.95)}
 .fx-btn.voice-active{border-color:var(--accent);background:rgba(255,45,85,.1);box-shadow:0 0 12px rgba(255,45,85,.15)}
-.fx-icon{font-size:20px;margin-bottom:4px}.fx-name{font-size:10px;font-weight:600;color:var(--muted)}
+.fx-icon{font-size:20px;margin-bottom:4px}.fx-name{font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upload-jingle{position:absolute;top:4px;right:4px;font-size:9px;color:var(--muted);background:transparent;border:none;cursor:pointer;z-index:2}.upload-jingle:hover{color:var(--accent)}
 .req-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:6px}
 .sch-table{width:100%;border-collapse:collapse;font-size:12px}.sch-table th{text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-size:11px}
 .sch-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04)}.sch-table tr.current-row{background:rgba(255,45,85,.08)}.sch-table tr.current-row td{color:var(--accent);font-weight:600}
@@ -96,7 +97,6 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 
 <div class="relative z-10 w-full max-w-md" style="backdrop-filter:blur(12px);background:rgba(14,14,24,.85);border:1px solid var(--border);border-radius:20px;padding:36px 32px">
     
-    <!-- Logo Eklendi -->
     <div class="flex justify-center mb-4">
         <img src="https://z-cdn-media.chatglm.cn/files/63708ddc-b0dd-4942-bfe1-076116c9c2ed.png?auth_key=1884486179-0aa65ddb377344398210fee4e6feacf0-0-9a593771f0a4c3e44c25b1dda37c41fa" alt="Radyo Logo" class="w-28 h-28 rounded-full object-cover" style="border:2px solid var(--accent);box-shadow:0 0 15px rgba(255,45,85,.2)">
     </div>
@@ -175,9 +175,21 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div id="tab-fx" class="tab-content mt-3">
 <div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-music mr-1"></i>JINGLELER</div>
 <div class="grid gap-2 mb-4" style="grid-template-columns:repeat(3,1fr)">
-<div class="fx-btn" data-fx="jingle-short"><div class="fx-icon" style="color:#ff2d55"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Kisa</div></div>
-<div class="fx-btn" data-fx="jingle-mid"><div class="fx-icon" style="color:#4d96ff"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Orta</div></div>
-<div class="fx-btn" data-fx="jingle-long"><div class="fx-icon" style="color:#ffd93d"><i class="fas fa-compact-disc"></i></div><div class="fx-name">Uzun</div></div>
+    <div class="fx-btn" data-fx="jingle-short">
+        <button class="upload-jingle" data-fx="jingle-short"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#ff2d55"><i class="fas fa-compact-disc"></i></div>
+        <div class="fx-name" id="jingle-name-short">Kisa</div>
+    </div>
+    <div class="fx-btn" data-fx="jingle-mid">
+        <button class="upload-jingle" data-fx="jingle-mid"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#4d96ff"><i class="fas fa-compact-disc"></i></div>
+        <div class="fx-name" id="jingle-name-mid">Orta</div>
+    </div>
+    <div class="fx-btn" data-fx="jingle-long">
+        <button class="upload-jingle" data-fx="jingle-long"><i class="fas fa-folder-plus"></i></button>
+        <div class="fx-icon" style="color:#ffd93d"><i class="fas fa-compact-disc"></i></div>
+        <div class="fx-name" id="jingle-name-long">Uzun</div>
+    </div>
 </div>
 <div class="text-xs font-semibold mb-2" style="color:var(--muted)"><i class="fas fa-volume-up mr-1"></i>SES EFEKTLERI</div>
 <div class="grid gap-2 mb-4" style="grid-template-columns:repeat(4,1fr)">
@@ -280,6 +292,7 @@ var voiceFilter=null,voiceDelay=null,voiceDelayFb=null,voiceModOsc=null,voiceMod
 var lsAudioCtx=null,lsAnalyser=null,lsGain=null,lsPlayNode=null,lsFreqData=null,lsRafId=null,lsPeakL=0,lsPeakR=0;
 var djAudio=null,djPlaylist=[],djCurIdx=-1,djPlaying=false;
 var ws=null,wsReconn=null;
+var customJingles = {}; // Yüklenen jingle dosyalarını tutar
 
 const workletCode = `
 class PlaybackProcessor extends AudioWorkletProcessor {
@@ -391,8 +404,28 @@ var dz=$('dropZone'),fi=$('fileInp');
 dz.addEventListener('click',function(){fi.click();});dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag');addFiles(e.dataTransfer.files);});fi.addEventListener('change',function(){addFiles(fi.files);fi.value='';});
  $('plPrev').addEventListener('click',function(){playPl(djCurIdx-1);});$('plPlay').addEventListener('click',toggleDj);$('plNext').addEventListener('click',function(){playPl(djCurIdx+1);});
  $('rngDjVol').addEventListener('input',function(e){$('lblDjVol').textContent=e.target.value+'%';if(bcDjGain)bcDjGain.gain.value=(S.micOn?0.15:1)*parseInt(e.target.value)/100;});
-document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(){playFx(b.dataset.fx);});});
+document.querySelectorAll('.fx-btn').forEach(function(b){b.addEventListener('click',function(e){if(e.target.closest('.upload-jingle'))return;playFx(b.dataset.fx);});});
 document.querySelectorAll('.voice-fx').forEach(function(b){b.addEventListener('click',function(){setVoiceEffect(b.dataset.voice);});});
+
+// Jingle Yükleme Butonları
+document.querySelectorAll('.upload-jingle').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var fxType = btn.dataset.fx;
+        var inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'audio/*';
+        inp.onchange = function(ev) {
+            var file = ev.target.files[0];
+            if (!file) return;
+            customJingles[fxType] = URL.createObjectURL(file);
+            $('jingle-name-' + fxType.split('-')[1]).textContent = file.name.substring(0, 10);
+            toast('Jingle yüklendi: ' + file.name);
+        };
+        inp.click();
+    });
+});
+
  $('btnRec').addEventListener('click',toggleRec);$('btnRecDl').addEventListener('click',dlRec);
  $('btnAd').addEventListener('click',toggleAd);
  $('btnSchAdd').addEventListener('click',addSchRow);$('btnSchSave').addEventListener('click',saveSch);
@@ -455,7 +488,19 @@ function playPl(idx){if(!S.broadcasting||!djAudio||idx<0||idx>=djPlaylist.length
 function toggleDj(){if(!S.broadcasting)return;if(djPlaying){djAudio.pause();djPlaying=false;$('plPlay').innerHTML='<i class="fas fa-play"></i>';wsSend({type:'song-update',song:''});}else if(djCurIdx>=0){djAudio.play();djPlaying=true;$('plPlay').innerHTML='<i class="fas fa-pause"></i>';S.song=djPlaylist[djCurIdx].name;wsSend({type:'song-update',song:S.song});}else if(djPlaylist.length)playPl(0);}
 function setVoiceEffect(fx){voiceEffect=fx;voiceFilter.type='allpass';voiceDelay.delayTime.value=0;voiceDelayFb.gain.value=0;try{voiceModOsc.disconnect();}catch(e){}voiceModGain.gain.value=1.0;switch(fx){case'normal':break;case'telefon':voiceFilter.type='highpass';voiceFilter.frequency.value=1200;voiceFilter.Q.value=1;break;case'radyo':voiceFilter.type='lowpass';voiceFilter.frequency.value=2500;voiceFilter.Q.value=5;break;case'robot':voiceModOsc.connect(voiceModGain.gain);voiceModOsc.frequency.value=150;break;case'yanki':voiceDelay.delayTime.value=.25;voiceDelayFb.gain.value=.4;break;case'derin':voiceFilter.type='lowpass';voiceFilter.frequency.value=800;voiceFilter.Q.value=2;break;}document.querySelectorAll('.voice-fx').forEach(function(b){b.classList.toggle('voice-active',b.dataset.voice===fx);});toast('Ses efekti: '+fx);}
 function mkNoise(dur){var sr=bcAudioCtx.sampleRate,len=Math.floor(sr*dur),buf=bcAudioCtx.createBuffer(1,len,sr),d=buf.getChannelData(0);for(var i=0;i<len;i++)d[i]=Math.random()*2-1;return buf;}
-function playFx(type){if(!bcAudioCtx||!bcFxGain)return;var t=bcAudioCtx.currentTime;
+function playFx(type){if(!bcAudioCtx||!bcFxGain)return;
+    
+    // Özel yüklenmiş jingle varsa onu çal
+    if(type.startsWith('jingle-') && customJingles[type]) {
+        var a = new Audio(customJingles[type]);
+        var src = bcAudioCtx.createMediaElementSource(a);
+        src.connect(bcFxGain);
+        a.onended = function() { try { src.disconnect(); } catch(e){} };
+        a.play();
+        return;
+    }
+
+    var t=bcAudioCtx.currentTime;
 if(type==='jingle-short')mkOsc(t,[523.25,659.25,783.99],[0,.15,.3],[.35,.35,.5],.6);
 else if(type==='jingle-mid')mkOsc(t,[523.25,659.25,783.99,1046.5],[0,.2,.4,.6],[.3,.3,.3,.5],1);
 else if(type==='jingle-long'){mkOsc(t,[261.63,329.63,392,466.16,523.25,659.25],[0,.4,.8,1.2,1.6,2],[.3,.3,.3,.3,.3,.5],1.5);var bs=bcAudioCtx.createOscillator();bs.type='sine';bs.frequency.value=130.81;var bg=bcAudioCtx.createGain();bg.gain.setValueAtTime(.2,t);bg.gain.exponentialRampToValueAtTime(.001,t+3.5);bs.connect(bg);bg.connect(bcFxGain);bs.start(t);bs.stop(t+3.5);}
