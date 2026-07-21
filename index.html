@@ -525,7 +525,16 @@ bcGain.connect(voiceFilter);voiceFilter.connect(voiceDelay);
 voiceDelay.connect(voiceDelayFb);voiceDelayFb.connect(voiceDelay);
 voiceDelay.connect(voiceModGain);voiceModGain.connect(bcMixGain);bcMixGain.connect(bcAnalyser);
 bcDjGain=bcAudioCtx.createGain();bcDjGain.gain.value=parseInt($('rngDjVol').value)/100;bcDjGain.connect(bcMixGain);
-djAudio=new Audio();djAudio.crossOrigin='anonymous';bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);bcDjSource.connect(bcDjGain);
+djAudio=new Audio();djAudio.crossOrigin='anonymous';
+try {
+    bcDjSource=bcAudioCtx.createMediaElementSource(djAudio);
+    bcDjSource.connect(bcDjGain);
+} catch(e) {
+    toast('Müzik ses motoru başlatılamadı. Geçersiz link olabilir.');
+}
+djAudio.addEventListener('error', function() {
+    toast('HATA: Şarkı yüklenemedi! YouTube veya Spotify linkleri çalışmaz. Doğrudan .mp3 linki kullanmalısınız.');
+});
 djAudio.addEventListener('ended',function(){if(djPlaying&&djCurIdx+1<djPlaylist.length)playPl(djCurIdx+1);else{djPlaying=false;djCurIdx=-1;renderPl();wsSend({type:'song-update',song:''});}});
 bcFxGain=bcAudioCtx.createGain();bcFxGain.gain.value=0.5;bcFxGain.connect(bcMixGain);
 bcSendProc=bcAudioCtx.createScriptProcessor(2048,1,1);bcSendProc.onaudioprocess=function(e){if(ws&&ws.readyState===1){if(ws.bufferedAmount>16384)return;var float32=e.inputBuffer.getChannelData(0);var int16=new Int16Array(float32.length);for(var i=0;i<float32.length;i++){var s=Math.max(-1,Math.min(1,float32[i]));int16[i]=s<0?s*0x8000:s*0x7FFF;}ws.send(int16.buffer);}};bcMixGain.connect(bcSendProc);
