@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
+const ytdl = require('ytdl-core'); // YouTube ses çekme kütüphanesi
 
 const PORT = process.env.PORT || 3000;
 const BROADCASTER_PIN = '1234'; // Yayıncı güvenlik PIN'i
@@ -9,6 +10,33 @@ const stations = new Map();
 const activeNicks = new Set(); // Sistemdeki tüm benzersiz rumuzlar
 
 const server = http.createServer((req, res) => {
+    // YouTube Linki Var mı Kontrol Et
+    if (req.url.startsWith('/yt?url=')) {
+        const videoUrl = decodeURIComponent(req.url.replace('/yt?url=', ''));
+        if (ytdl.validateURL(videoUrl)) {
+            res.writeHead(200, { 'Content-Type': 'audio/mpeg', 'Access-Control-Allow-Origin': '*' });
+            // Sadece sesi çek ve yayınla
+            ytdl(videoUrl, { filter: 'audioonly', quality: 'highestaudio' })
+                .on('error', () => { res.end(); })
+                .pipe(res);
+        } else {
+            res.writeHead(400); res.end('Geçersiz YouTube linki');
+        }
+        return;
+    }
+
+    // Normal web sitesi dosyaları
+    if (req.url === '/' || req.url === '/index.html') {
+        fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+            if (err) { res.writeHead(500); res.end('Hata'); return; }
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(data);
+        });
+    } else {
+        res.writeHead(404);
+        res.end();
+    }
+});
     if (req.url === '/' || req.url === '/index.html') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
             if (err) { res.writeHead(500); res.end('Hata'); return; }

@@ -499,12 +499,26 @@ function formatSongName(rawName){
 function addUrl(){
     var url=$('iUrlAdd').value.trim();
     if(!url)return;
-    var rawName=url.split('/').pop().split('?')[0]||'Online Parca';
-    var name = formatSongName(rawName);
-    djPlaylist.push({name:name,url:url,duration:0});
+    
+    var finalUrl = url;
+    var name = 'Online Parca';
+
+    // Eğer YouTube linkiyse sunucudaki çeviriciye (proxy) gönder
+    if (url.indexOf('youtube.com/watch?v=') !== -1 || url.indexOf('youtu.be/') !== -1) {
+        finalUrl = '/yt?url=' + encodeURIComponent(url);
+        var videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
+        if (videoId) videoId = videoId.split('&')[0];
+        name = 'YouTube: ' + (videoId || 'Parca');
+    } else {
+        // Normal linkse ismini düzelt
+        var rawName=url.split('/').pop().split('?')[0]||'Online Parca';
+        name = formatSongName(rawName);
+    }
+
+    djPlaylist.push({name:name,url:finalUrl,duration:0});
     $('iUrlAdd').value='';
     renderPl();
-    toast('Link listeye eklendi');
+    toast('Link listeye eklendi (YouTube ise dönüştürülüyor...)');
 }
 
 function toggleBc(){
